@@ -61,7 +61,12 @@
 }
 
 /* ── Cover ── */
-.cd-cover-col { width: 100%; }
+.cd-cover-col {
+  width: 100%;
+  position: sticky;
+  top: 14px;
+  align-self: start;
+}
 
 .cd-cover {
   width: 100%;
@@ -528,6 +533,7 @@
   .cd-body { width: min(960px, 95vw); padding: 0 1rem; }
   .cd-two-col { grid-template-columns: 1fr; }
   .cd-hero-body { grid-template-columns: 1fr; }
+  .cd-cover-col { position: static; }
 }
 
 @media (max-width: 640px) {
