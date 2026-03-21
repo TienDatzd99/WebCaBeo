@@ -1,6 +1,14 @@
 import { Link } from 'react-router-dom';
 import './ComicCard.css';
 
+const STATUS_META = {
+  ongoing: { label: 'Đang ra', cls: 'badge-ongoing' },
+  completed: { label: 'Hoàn thành', cls: 'badge-done' },
+  hiatus: { label: 'Tạm ngưng', cls: 'badge-hiatus' },
+};
+
+const getStatusMeta = (status) => STATUS_META[status] || STATUS_META.ongoing;
+
 /* Horizontal/Square card — used in "Truyện đề cử" and "Đề cử" sliders */
 export function CardSquare({ comic }) {
   const statusMeta = getStatusMeta(comic.status);

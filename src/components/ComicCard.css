@@ -12,6 +12,7 @@
 }
 .badge-done    { background: #16a34a; color: #fff; }
 .badge-ongoing { background: rgba(0,0,0,0.65); color: #e5e7eb; border: 1px solid rgba(255,255,255,0.15); }
+.badge-hiatus  { background: #d97706; color: #fff; }
 .badge-new     { background: #ef4444; color: #fff; }
 
 /* ─── Square card (horizontal sliders) ────────  */
