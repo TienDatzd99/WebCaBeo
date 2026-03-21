@@ -5,6 +5,8 @@
   min-height: 100vh;
   background: linear-gradient(90deg,#232323 0,#232323 10%,#413726 35%,#232323 60%,#232323);
   padding: 1.4rem 0 3rem;
+  --cd-left-col: 300px;
+  --cd-right-col: minmax(0, 1fr);
 }
 .cd-center { display:flex; align-items:center; justify-content:center; min-height:60vh; color:var(--text-muted); }
 .spin { animation: spin 1s linear infinite; }
@@ -52,16 +54,17 @@
 .cd-hero-body {
   position: relative;
   z-index: 1;
-  display: flex;
+  display: grid;
+  grid-template-columns: var(--cd-left-col) var(--cd-right-col);
   gap: 1.35rem;
   align-items: flex-start;
 }
 
 /* ── Cover ── */
-.cd-cover-col { flex-shrink: 0; }
+.cd-cover-col { width: 100%; }
 
 .cd-cover {
-  width: 198px;
+  width: 100%;
   height: auto;
   display: block;
   border-radius: 6px;
@@ -236,7 +239,7 @@
 .cd-body {
   width: min(1040px, 94vw);
   margin: 0.95rem auto 0;
-  padding: 0;
+  padding: 0 1.45rem;
   display: flex;
   flex-direction: column;
   gap: 1.05rem;
@@ -245,7 +248,7 @@
 /* Two-column layout */
 .cd-two-col {
   display: grid;
-  grid-template-columns: 1fr 1.9fr;
+  grid-template-columns: var(--cd-left-col) var(--cd-right-col);
   gap: 1rem;
   align-items: flex-start;
 }
@@ -522,8 +525,9 @@
 ─────────────────────────────────────────────── */
 @media (max-width: 900px) {
   .cd-hero { width: min(960px, 95vw); padding: 1rem; }
-  .cd-body { width: min(960px, 95vw); }
+  .cd-body { width: min(960px, 95vw); padding: 0 1rem; }
   .cd-two-col { grid-template-columns: 1fr; }
+  .cd-hero-body { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 640px) {
