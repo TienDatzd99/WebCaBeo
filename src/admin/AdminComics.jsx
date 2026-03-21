@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiPlus, FiEdit2, FiTrash2, FiList, FiX, FiSearch } from 'react-icons/fi';
 import {
@@ -18,6 +18,8 @@ const STATUS_OPTIONS = [
   { value: 'completed', label: 'Hoàn thành', badge: 'badge-completed' },
   { value: 'hiatus', label: 'Tạm ngưng', badge: 'badge-hiatus' },
 ];
+const COVER_CROP_WIDTH = 320;
+const COVER_CROP_HEIGHT = 480;
 
 const getStatusMeta = (status) =>
   STATUS_OPTIONS.find((opt) => opt.value === status) || STATUS_OPTIONS[0];
@@ -39,6 +41,17 @@ export default function AdminComics() {
   const [chapForm,   setChapForm]   = useState(EMPTY_CHAP);
   const [newInitChap, setNewInitChap] = useState(EMPTY_INITIAL_CHAP);
   const [saving,     setSaving]     = useState(false);
+  const [cropModalOpen, setCropModalOpen] = useState(false);
+  const [cropImage, setCropImage] = useState(null);
+  const [cropImageLabel, setCropImageLabel] = useState('');
+  const [cropZoom, setCropZoom] = useState(1);
+  const [cropOffsetX, setCropOffsetX] = useState(0);
+  const [cropOffsetY, setCropOffsetY] = useState(0);
+  const [cropLoading, setCropLoading] = useState(false);
+  const [cropError, setCropError] = useState('');
+  const coverFileInputRef = useRef(null);
+  const visibleCoverInputRef = useRef(null);
+  const cropCanvasRef = useRef(null);
 
   const LIMIT = 15;
 
@@ -148,6 +161,105 @@ export default function AdminComics() {
     ...f,
     genre_ids: f.genre_ids.includes(id) ? f.genre_ids.filter(x => x !== id) : [...f.genre_ids, id]
   }));
+
+  const resetCropperState = useCallback(() => {
+    setCropImage(null);
+    setCropImageLabel('');
+    setCropZoom(1);
+    setCropOffsetX(0);
+    setCropOffsetY(0);
+    setCropLoading(false);
+    setCropError('');
+  }, []);
+
+  const drawCropPreview = useCallback((image, zoom, offsetX, offsetY) => {
+    const canvas = cropCanvasRef.current;
+    if (!canvas || !image) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    const baseScale = Math.max(COVER_CROP_WIDTH / image.width, COVER_CROP_HEIGHT / image.height);
+    const finalScale = baseScale * zoom;
+    const drawWidth = image.width * finalScale;
+    const drawHeight = image.height * finalScale;
+    const dx = (COVER_CROP_WIDTH - drawWidth) / 2 + (offsetX / 100) * COVER_CROP_WIDTH;
+    const dy = (COVER_CROP_HEIGHT - drawHeight) / 2 + (offsetY / 100) * COVER_CROP_HEIGHT;
+
+    ctx.clearRect(0, 0, COVER_CROP_WIDTH, COVER_CROP_HEIGHT);
+    ctx.fillStyle = '#111827';
+    ctx.fillRect(0, 0, COVER_CROP_WIDTH, COVER_CROP_HEIGHT);
+    ctx.drawImage(image, dx, dy, drawWidth, drawHeight);
+  }, []);
+
+  const openCropper = () => {
+    resetCropperState();
+    setCropModalOpen(true);
+  };
+
+  const loadCropImage = useCallback(async (source, label) => {
+    setCropLoading(true);
+    setCropError('');
+    try {
+      const image = await new Promise((resolve, reject) => {
+        const img = new Image();
+        if (typeof source === 'string' && /^https?:\/\//i.test(source)) {
+          img.crossOrigin = 'anonymous';
+        }
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error('Không tải được ảnh'));
+        img.src = source;
+      });
+      setCropImage(image);
+      setCropImageLabel(label || 'Ảnh mới');
+      setCropZoom(1);
+      setCropOffsetX(0);
+      setCropOffsetY(0);
+    } catch {
+      setCropError('Không thể tải ảnh để cắt. Hãy thử tải ảnh từ máy để ổn định hơn.');
+    } finally {
+      setCropLoading(false);
+    }
+  }, []);
+
+  const onPickCoverFile = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = async () => {
+      await loadCropImage(String(reader.result || ''), file.name);
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+  };
+
+  const onLoadCoverFromUrl = async () => {
+    const url = (form.cover_url || '').trim();
+    if (!url) {
+      setCropError('Bạn chưa nhập URL ảnh bìa.');
+      return;
+    }
+    await loadCropImage(url, 'Ảnh từ URL');
+  };
+
+  const applyCroppedCover = () => {
+    const canvas = cropCanvasRef.current;
+    if (!canvas || !cropImage) return;
+
+    try {
+      const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      setForm((f) => ({ ...f, cover_url: croppedDataUrl }));
+      setCropModalOpen(false);
+      resetCropperState();
+    } catch {
+      setCropError('Không thể xuất ảnh từ URL này do chặn CORS. Hãy dùng nút tải ảnh từ máy.');
+    }
+  };
+
+  useEffect(() => {
+    if (!cropModalOpen || !cropImage) return;
+    drawCropPreview(cropImage, cropZoom, cropOffsetX, cropOffsetY);
+  }, [cropModalOpen, cropImage, cropZoom, cropOffsetX, cropOffsetY, drawCropPreview]);
 
   /* Chapter modal */
   const openChaps = async (comic) => {
@@ -281,6 +393,48 @@ export default function AdminComics() {
               <div className="form-group">
                 <label className="form-label">URL ảnh bìa</label>
                 <input className="form-input" value={form.cover_url} onChange={e => setForm(f => ({...f,cover_url:e.target.value}))} placeholder="https://..."/>
+                <div className="cover-upload-row">
+                  <label className="cover-upload-btn" htmlFor="cover-upload-input">
+                    Upload ảnh từ máy
+                  </label>
+                  <input
+                    ref={visibleCoverInputRef}
+                    id="cover-upload-input"
+                    type="file"
+                    accept="image/*"
+                    onChange={onPickCoverFile}
+                  />
+                </div>
+                <div className="cover-tools">
+                  <button
+                    type="button"
+                    className="btn-sm btn-view"
+                    onClick={() => {
+                      setCropModalOpen(true);
+                    }}
+                  >
+                    Mở khung cắt ảnh
+                  </button>
+                  <button
+                    type="button"
+                    className="btn-sm btn-edit"
+                    onClick={() => {
+                      openCropper();
+                      onLoadCoverFromUrl();
+                    }}
+                    disabled={cropLoading}
+                  >
+                    Lấy vùng từ URL hiện tại
+                  </button>
+                  <span className="cover-tools-help">Ảnh sẽ cắt theo khung bìa dọc 2:3.</span>
+                  <input
+                    ref={coverFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    style={{ display:'none' }}
+                    onChange={onPickCoverFile}
+                  />
+                </div>
               </div>
               <div className="form-group">
                 <label className="form-label">Link audio</label>
@@ -381,6 +535,82 @@ export default function AdminComics() {
               <button className="btn-sm btn-edit" onClick={() => setComicModal(null)}>Hủy</button>
               <button className="btn-primary" onClick={saveComic} disabled={saving}>
                 {saving ? 'Đang lưu...' : 'Lưu lại'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {cropModalOpen && (
+        <div className="modal-overlay" style={{ zIndex: 1200 }} onClick={e => e.target === e.currentTarget && setCropModalOpen(false)}>
+          <div className="modal-box cover-crop-modal">
+            <div className="modal-header">
+              <h3>🖼️ Lấy vùng ảnh bìa</h3>
+              <button className="modal-close" onClick={() => setCropModalOpen(false)}><FiX /></button>
+            </div>
+            <div className="modal-body">
+              <div className="cover-crop-grid">
+                <div className="cover-crop-preview-wrap">
+                  <canvas
+                    ref={cropCanvasRef}
+                    width={COVER_CROP_WIDTH}
+                    height={COVER_CROP_HEIGHT}
+                    className="cover-crop-canvas"
+                  />
+                </div>
+
+                <div className="cover-crop-controls">
+                  <div className="cover-crop-source">Nguồn: {cropImageLabel || 'Chưa chọn ảnh'}</div>
+
+                  <button type="button" className="btn-sm btn-view" onClick={() => visibleCoverInputRef.current?.click()}>
+                    Chọn ảnh khác từ máy
+                  </button>
+
+                  <div className="cover-crop-control">
+                    <label className="form-label">Zoom</label>
+                    <input
+                      type="range"
+                      min="1"
+                      max="3"
+                      step="0.01"
+                      value={cropZoom}
+                      onChange={(e) => setCropZoom(Number(e.target.value))}
+                    />
+                  </div>
+
+                  <div className="cover-crop-control">
+                    <label className="form-label">Ngang</label>
+                    <input
+                      type="range"
+                      min="-50"
+                      max="50"
+                      step="1"
+                      value={cropOffsetX}
+                      onChange={(e) => setCropOffsetX(Number(e.target.value))}
+                    />
+                  </div>
+
+                  <div className="cover-crop-control">
+                    <label className="form-label">Dọc</label>
+                    <input
+                      type="range"
+                      min="-50"
+                      max="50"
+                      step="1"
+                      value={cropOffsetY}
+                      onChange={(e) => setCropOffsetY(Number(e.target.value))}
+                    />
+                  </div>
+
+                  {cropLoading && <div className="cover-crop-note">Đang tải ảnh...</div>}
+                  {cropError && <div className="cover-crop-error">{cropError}</div>}
+                </div>
+              </div>
+            </div>
+            <div className="modal-footer">
+              <button className="btn-sm btn-edit" onClick={() => setCropModalOpen(false)}>Hủy</button>
+              <button className="btn-primary" onClick={applyCroppedCover} disabled={!cropImage || cropLoading}>
+                Dùng ảnh đã cắt
               </button>
             </div>
           </div>
