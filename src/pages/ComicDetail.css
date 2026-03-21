@@ -203,6 +203,10 @@
   margin-bottom: 0.85rem;
   max-width: none;
   width: 100%;
+  display: block;
+  white-space: pre-wrap;
+  overflow: visible;
+  text-overflow: clip;
 }
 
 /* ── Stats bar (inside meta col) ── */
