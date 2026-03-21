@@ -29,6 +29,7 @@ db.exec(`
     author      TEXT NOT NULL,
     description TEXT,
     cover_url   TEXT,
+    audio_url   TEXT,
     status      TEXT DEFAULT 'ongoing',
     views       INTEGER DEFAULT 0,
     created_at  TEXT DEFAULT (datetime('now'))
@@ -91,6 +92,12 @@ db.exec(`
     created_at TEXT    DEFAULT (datetime('now'))
   );
 `);
+
+// Lightweight migration for existing databases created before new columns were added.
+const comicCols = db.prepare("PRAGMA table_info('comics')").all();
+if (!comicCols.some((c) => c.name === 'audio_url')) {
+  db.exec('ALTER TABLE comics ADD COLUMN audio_url TEXT');
+}
 
 // ── SEED ─────────────────────────────────────────────────────────────────────
 const alreadySeeded = db.prepare('SELECT COUNT(*) as cnt FROM comics').get().cnt > 0;

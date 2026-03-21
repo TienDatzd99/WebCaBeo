@@ -93,13 +93,13 @@ router.get('/comics/:id', (req, res) => {
 });
 
 router.post('/comics', (req, res) => {
-  const { title, author, description, cover_url, status, genre_ids = [] } = req.body;
+  const { title, author, description, cover_url, audio_url, status, genre_ids = [] } = req.body;
   if (!title || !author) return res.status(400).json({ error: 'title and author required' });
 
   const info = db.prepare(`
-    INSERT INTO comics (title, author, description, cover_url, status)
-    VALUES (?, ?, ?, ?, ?)
-  `).run(title, author, description || '', cover_url || '', status || 'ongoing');
+    INSERT INTO comics (title, author, description, cover_url, audio_url, status)
+    VALUES (?, ?, ?, ?, ?, ?)
+  `).run(title, author, description || '', cover_url || '', audio_url || '', status || 'ongoing');
 
   const id = info.lastInsertRowid;
   const insG = db.prepare('INSERT OR IGNORE INTO comic_genres VALUES (?, ?)');
@@ -109,11 +109,11 @@ router.post('/comics', (req, res) => {
 });
 
 router.put('/comics/:id', (req, res) => {
-  const { title, author, description, cover_url, status, genre_ids } = req.body;
+  const { title, author, description, cover_url, audio_url, status, genre_ids } = req.body;
   db.prepare(`
-    UPDATE comics SET title=?, author=?, description=?, cover_url=?, status=?
+    UPDATE comics SET title=?, author=?, description=?, cover_url=?, audio_url=?, status=?
     WHERE id=?
-  `).run(title, author, description, cover_url, status, req.params.id);
+  `).run(title, author, description, cover_url, audio_url || '', status, req.params.id);
 
   if (genre_ids !== undefined) {
     db.prepare('DELETE FROM comic_genres WHERE comic_id = ?').run(req.params.id);

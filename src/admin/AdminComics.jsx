@@ -7,7 +7,7 @@ import {
   getAdminGenres
 } from '../api/admin.js';
 
-const EMPTY_COMIC = { title:'', author:'', description:'', cover_url:'', status:'ongoing', genre_ids:[] };
+const EMPTY_COMIC = { title:'', author:'', description:'', cover_url:'', audio_url:'', status:'ongoing', genre_ids:[] };
 const EMPTY_CHAP  = { number:'', title:'' };
 const STATUS_OPTIONS = [
   { value: 'ongoing', label: 'Đang ra', badge: 'badge-ongoing' },
@@ -201,6 +201,10 @@ export default function AdminComics() {
               <div className="form-group">
                 <label className="form-label">URL ảnh bìa</label>
                 <input className="form-input" value={form.cover_url} onChange={e => setForm(f => ({...f,cover_url:e.target.value}))} placeholder="https://..."/>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Link audio</label>
+                <input className="form-input" value={form.audio_url || ''} onChange={e => setForm(f => ({...f,audio_url:e.target.value}))} placeholder="https://..."/>
               </div>
               <div className="form-row">
                 <div className="form-group">
