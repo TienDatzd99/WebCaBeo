@@ -71,11 +71,11 @@ export default function AdminComics() {
     try {
       if (comicModal === 'create') {
         const normalizedAuthor = (form.author || '').trim();
+        const normalizedTranslator = (form.translator || '').trim();
         const payload = {
           ...form,
-          // Backward-compat: old backend versions still require a truthy author field.
-          author: normalizedAuthor || ' ',
-          translator: (form.translator || '').trim(),
+          author: normalizedAuthor,
+          translator: normalizedTranslator,
           chapters: (form.initial_chapters || [])
             .map((ch) => ({
               number: Number(ch.number),
@@ -84,7 +84,20 @@ export default function AdminComics() {
             }))
             .filter((ch) => Number.isFinite(ch.number)),
         };
-        await createComic(payload);
+        try {
+          await createComic(payload);
+        } catch (error) {
+          // Backward-compat: old backend may still require author.
+          const apiError = error?.response?.data?.error || '';
+          if (typeof apiError === 'string' && apiError.toLowerCase().includes('title and author required')) {
+            await createComic({
+              ...payload,
+              author: normalizedAuthor || normalizedTranslator || ' ',
+            });
+          } else {
+            throw error;
+          }
+        }
       }
       else {
         await updateComic(comicModal.id, {
@@ -284,7 +297,7 @@ export default function AdminComics() {
                 <label className="form-label">Thể loại</label>
                 <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginTop:4 }}>
                   {genres.map(g => (
-                    <button key={g.id} onClick={() => toggleGenre(g.id)}
+                    <button type="button" key={g.id} onClick={() => toggleGenre(g.id)}
                       style={{
                         padding:'0.25rem 0.65rem', borderRadius:20, fontSize:'0.78rem',
                         cursor:'pointer', border:'1px solid',

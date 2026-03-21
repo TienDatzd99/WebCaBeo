@@ -80,7 +80,7 @@ export default function ComicDetail() {
       ? comic.audio_url
       : `https://${comic.audio_url}`)
     : DEFAULT_AUDIO_URL;
-  const translatorName = comic.translator || comic.author || '';
+  const translatorName = (comic.translator || comic.author || '').trim();
   const authorName = (comic.author || '').trim();
 
   /* fake reviews for demo */
@@ -112,7 +112,7 @@ export default function ComicDetail() {
                 <FiUser className="cd-ri violet" />
                 <span>Người dịch: <span className="clr-purple font-bold">{translatorName || 'Đang cập nhật'}</span></span>
               </div>
-              {authorName && (
+              {authorName && authorName !== translatorName && (
                 <div className="cd-row">
                   <FiUser className="cd-ri cyan" />
                   <span>Tác giả: <span className="clr-cyan font-bold">{authorName}</span></span>
