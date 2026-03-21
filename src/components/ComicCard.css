@@ -44,21 +44,39 @@
 
 .card-sq-info {
   background: #363940;
-  padding: 0.78rem 0.88rem 0.82rem;
+  padding: 0.88rem 0.96rem 0.92rem;
 }
+
+.card-sq-row1 {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.55rem;
+  margin-bottom: 0.45rem;
+}
+
 .card-sq-title {
-  font-size: 0.94rem;
+  font-size: 1.02rem;
   font-weight: 700;
   color: #e8eaee;
-  margin-bottom: 0.42rem;
+  flex: 1;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+.card-sq-rating {
+  font-size: 1.06rem;
+  font-weight: 700;
+  color: #d4d9e2;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .card-sq-row2 {
   display: flex;
   justify-content: space-between;
-  font-size: 0.78rem;
+  font-size: 0.84rem;
   color: #aeb4bf;
   gap: 0.7rem;
 }

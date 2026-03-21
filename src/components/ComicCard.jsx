@@ -12,6 +12,7 @@ const getStatusMeta = (status) => STATUS_META[status] || STATUS_META.ongoing;
 /* Horizontal/Square card — used in "Truyện đề cử" and "Đề cử" sliders */
 export function CardSquare({ comic }) {
   const statusMeta = getStatusMeta(comic.status);
+  const rating = Number(comic.rating ?? 0);
 
   return (
     <Link to={`/comic/${comic.id}`} className="card-sq">
@@ -20,9 +21,12 @@ export function CardSquare({ comic }) {
         <span className={`card-badge ${statusMeta.cls}`}>{statusMeta.label}</span>
       </div>
       <div className="card-sq-info">
-        <p className="card-sq-title">{comic.title}</p>
+        <div className="card-sq-row1">
+          <p className="card-sq-title">{comic.title}</p>
+          <span className="card-sq-rating"><span className="star-y">★</span> {rating > 0 ? rating.toFixed(1) : '—'}</span>
+        </div>
         <div className="card-sq-row2">
-          <span className="card-sq-views">Lượt xem: {comic.views?.toLocaleString()}</span>
+          <span className="card-sq-views">Lượt xem: {comic.views?.toLocaleString() ?? 0}</span>
           <span className="card-sq-chaps">{comic.chapterCount ?? comic.chapter_count ?? '—'} chương</span>
         </div>
       </div>
