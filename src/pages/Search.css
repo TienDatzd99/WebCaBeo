@@ -1,0 +1,435 @@
+/* ══════════════════════════════════════
+   SEARCH PAGE — matches camap.site
+══════════════════════════════════════ */
+
+.sp-page {
+  min-height: 80vh;
+}
+
+.sp-container {
+  padding: 2rem 4vw 5rem;
+  max-width: 100%;
+}
+
+/* ── Header ─────────────────────────── */
+.sp-header {
+  margin-bottom: 1.5rem;
+}
+
+.sp-title-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.sp-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #f3f4f6;
+  letter-spacing: -0.01em;
+}
+
+.sp-count {
+  font-size: 0.82rem;
+  color: #6b7280;
+}
+
+/* Search input */
+.sp-search-wrap {
+  position: relative;
+  margin-bottom: 0.85rem;
+}
+
+.sp-search-ico {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  font-size: 1rem;
+  pointer-events: none;
+}
+
+.sp-search-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 1rem 0 2.75rem;
+  background: #1a1a1a;
+  border: 1px solid #374151;
+  border-radius: 8px;
+  color: #f3f4f6;
+  font-size: 0.95rem;
+  font-family: inherit;
+  outline: none;
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+}
+.sp-search-input::placeholder { color: #6b7280; }
+.sp-search-input:focus { border-color: rgba(99,102,241,0.5); }
+
+/* Toolbar */
+.sp-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.sp-toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sp-filter-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.85rem;
+  background: #1a1a1a;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  color: #d1d5db;
+  font-size: 0.82rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.sp-filter-btn:hover,
+.sp-filter-btn.active {
+  background: #242424;
+  border-color: rgba(99,102,241,0.4);
+  color: #a5b4fc;
+}
+
+.sp-clear-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.4rem 0.75rem;
+  background: transparent;
+  border: none;
+  color: #9ca3af;
+  font-size: 0.8rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.sp-clear-btn:hover { color: #f3f4f6; }
+
+/* Sort dropdown */
+.sp-sort-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sp-sort-label {
+  font-size: 0.82rem;
+  color: #9ca3af;
+  white-space: nowrap;
+}
+
+.sp-sort-select-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.sp-sort-select {
+  appearance: none;
+  padding: 0.35rem 2rem 0.35rem 0.7rem;
+  background: #1a1a1a;
+  border: 1px solid #374151;
+  border-radius: 6px;
+  color: #d1d5db;
+  font-size: 0.82rem;
+  font-family: inherit;
+  cursor: pointer;
+  outline: none;
+}
+.sp-sort-select:focus { border-color: rgba(99,102,241,0.5); }
+
+.sp-sort-arrow {
+  position: absolute;
+  right: 6px;
+  font-size: 0.85rem;
+  color: #9ca3af;
+  pointer-events: none;
+}
+
+/* ── Body layout ─────────────────────── */
+.sp-body {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+}
+
+/* ── Sidebar — card style matching camap.site ── */
+.sp-sidebar {
+  display: block;
+  width: 280px;
+  flex-shrink: 0;
+  background: var(--card);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
+  overflow: hidden;
+  position: sticky;
+  top: 80px;
+  max-height: calc(100vh - 100px);
+  overflow-y: auto;
+}
+
+/* When toggled OFF on mobile */
+@media (max-width: 900px) {
+  .sp-sidebar { display: none; }
+  .sp-body.has-filter .sp-sidebar { display: block; width: 100%; position: static; max-height: none; }
+}
+
+/* Sidebar header — "Lọc theo" */
+.sp-sidebar-header {
+  padding: 1.25rem 1.5rem 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #f3f4f6;
+  letter-spacing: -0.01em;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  margin-bottom: 0;
+}
+
+/* Sidebar body padding */
+.sp-sidebar-body {
+  padding: 1.25rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Each filter group */
+.sp-filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* Group label */
+.sp-filter-label {
+  font-size: 0.82rem;
+  font-weight: 500;
+  color: #d1d5db;
+  margin-bottom: 0.6rem;
+  display: block;
+}
+
+/* Checkbox / radio list */
+.sp-filter-checks {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Genre list: scrollable like camap.site max-h-32 */
+.sp-genre-scroll {
+  max-height: 128px;   /* = max-h-32 (8rem) */
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #374151 transparent;
+}
+.sp-genre-scroll::-webkit-scrollbar { width: 3px; }
+.sp-genre-scroll::-webkit-scrollbar-thumb { background: #374151; border-radius: 2px; }
+
+/* Each row */
+.sp-check-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.sp-checkbox {
+  width: 14px;
+  height: 14px;
+  accent-color: #6366f1;
+  cursor: pointer;
+  flex-shrink: 0;
+  border-radius: 3px;
+}
+
+.sp-check-label {
+  font-size: 0.82rem;
+  color: #d1d5db;
+  line-height: 1.4;
+}
+.sp-check-row:hover .sp-check-label { color: #f3f4f6; }
+
+/* Divider */
+.sp-divider {
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+}
+
+/* Rating slider */
+.sp-slider {
+  width: 100%;
+  accent-color: #6366f1;
+  cursor: pointer;
+}
+.sp-slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: #6b7280;
+  margin-top: 4px;
+}
+
+/* ── Main grid ───────────────────────── */
+.sp-main {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 3-column grid matching camap.site */
+.sp-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+
+/* ── Card ────────────────────────────── */
+.sp-card {
+  display: block;
+  text-decoration: none;
+  background: #1a1a1a;
+  border-radius: 8px;
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.sp-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+}
+
+.sp-card-img-wrap {
+  position: relative;
+}
+
+.sp-card-img {
+  width: 100%;
+  height: 192px;
+  object-fit: cover;
+  display: block;
+}
+
+.sp-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  background: rgba(20,20,20,0.82);
+  color: #e5e7eb;
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+/* both statuses share the same dark pill — differentiated by text only */
+
+.sp-card-info {
+  height: 102px;
+  padding: 12px 14px;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background-color: var(--card);
+}
+
+.sp-card-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #f3f4f6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  letter-spacing: 0.01em;
+}
+
+.sp-card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sp-card-views,
+.sp-card-chapter {
+  font-size: 0.72rem;
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* ── Empty state ─────────────────────── */
+.sp-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 5rem 0;
+  color: #4b5563;
+  text-align: center;
+}
+.sp-empty p { font-size: 0.95rem; margin: 0; }
+
+/* ── Pagination ──────────────────────── */
+.sp-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.3rem;
+  margin-top: 3rem;
+}
+
+.sp-pg-btn {
+  min-width: 36px;
+  height: 36px;
+  padding: 0 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #374151;
+  background: #1a1a1a;
+  color: #d1d5db;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.sp-pg-btn:hover:not(:disabled) { background: #242424; border-color: #6366f1; }
+.sp-pg-btn.active { background: #6366f1; border-color: #6366f1; color: #fff; }
+.sp-pg-btn:disabled { opacity: 0.35; cursor: default; }
+.sp-pg-text { min-width: auto; padding: 0 0.85rem; font-size: 0.82rem; }
+.sp-pg-ellipsis { color: #6b7280; font-size: 0.85rem; padding: 0 0.2rem; }
+
+/* ── Responsive ──────────────────────── */
+@media (max-width: 1200px) {
+  .sp-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 900px) {
+  .sp-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .sp-body { flex-direction: column; }
+}
+@media (max-width: 640px) {
+  .sp-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .sp-sidebar { width: 100%; position: static; }
+}

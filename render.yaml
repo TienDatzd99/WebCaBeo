@@ -1,0 +1,18 @@
+services:
+  - type: web
+    name: camap-api
+    env: node
+    plan: free
+    rootDir: .
+    buildCommand: npm install
+    startCommand: npm run server
+    healthCheckPath: /api/health
+    envVars:
+      - key: PORT
+        value: 3001
+      - key: FRONTEND_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: DB_PATH
+        value: /opt/render/project/src/server/camap.db
