@@ -23,7 +23,11 @@ const Login = () => {
       loginUser(res.data.token, res.data.user);
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.error || 'Đã có lỗi xảy ra');
+      if (!err.response) {
+        setError('Máy chủ đang khởi động, vui lòng thử lại sau vài giây');
+      } else {
+        setError(err.response?.data?.error || 'Đã có lỗi xảy ra');
+      }
     } finally {
       setLoading(false);
     }
