@@ -37,7 +37,7 @@ export default function Home() {
     }, []);
 
     const activeComic = featured[activeIdx] || featured[0] || null;
-    const sliderItemClass = 'w-[85%] shrink-0 sm:w-[47%] lg:w-[31%] xl:w-[calc((100%-60px)/4)]';
+    const sliderItemClass = 'w-[85%] shrink-0 sm:w-[47%] lg:w-[24%] xl:w-[calc((100%-80px)/5)]';
 
     // Định nghĩa mảng sai số để tạo sự khác biệt nhỏ về góc/vị trí giữa các thẻ ở vai trò Prev/Next
 const CARD_DNA = [
