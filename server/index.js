@@ -40,7 +40,13 @@ app.use('/api/admin',     adminRouter);
 
 // Health check
 app.get('/api/health', (_, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
+// ── Serve React App ───────────────────────────────────────────────────────
+app.use(express.static(path.join(__dirname, '../dist')));
 
+// SPA fallback - serve index.html for all unmatched routes
+app.get('*', (_, res) => {
+  res.sendFile(path.join(__dirname, '../dist/index.html'));
+});
 app.listen(PORT, () => {
   console.log(`🦈 Cá Mập API running at http://localhost:${PORT}`);
 });
