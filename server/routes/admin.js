@@ -129,7 +129,7 @@ router.post('/comics', (req, res) => {
       chapters.forEach((ch) => {
         const number = Number(ch?.number);
         if (!Number.isFinite(number)) return;
-        const chapterTitle = (ch?.title || '').trim() || `Chapter ${number}`;
+        const chapterTitle = (ch?.title || '').trim();
         const chapterContent = (ch?.content || '').trim();
         insertChapter.run(id, number, chapterTitle, chapterContent);
       });
@@ -233,7 +233,7 @@ router.post('/comics/:comicId/chapters', (req, res) => {
   if (!number) return res.status(400).json({ error: 'number required' });
   const info = db.prepare(
     'INSERT INTO chapters (comic_id, number, title, content) VALUES (?, ?, ?, ?)'
-  ).run(req.params.comicId, number, title || `Chapter ${number}`, content || '');
+  ).run(req.params.comicId, number, (title || '').trim(), content || '');
   res.json({ id: info.lastInsertRowid, message: 'Chapter created' });
 });
 

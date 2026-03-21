@@ -182,6 +182,9 @@ const Reading = () => {
 
   const textContent = (chapter.content || '').trim();
   const hasText = Boolean(textContent);
+  const rawTitle = (chapter.title || '').trim();
+  const isGenericTitle = /^chapter\s+\d+(?:\.\d+)?$/i.test(rawTitle) || /^chương\s+\d+(?:\.\d+)?$/i.test(rawTitle);
+  const displayTitle = !rawTitle || isGenericTitle ? '' : rawTitle;
 
   if (blocked) return (
     <div className="reading-page">
@@ -219,7 +222,7 @@ const Reading = () => {
         </div>
 
         <article className="chapter-text-wrap">
-          <h2 className="chapter-subtitle">{chapter.title || `Chương ${chapter.number}`}</h2>
+          {displayTitle && <h2 className="chapter-subtitle">{displayTitle}</h2>}
           {hasText ? (
             <pre className="chapter-text-block">{textContent}</pre>
           ) : (
