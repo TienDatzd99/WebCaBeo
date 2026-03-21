@@ -43,9 +43,12 @@ app.get('/api/health', (_, res) => res.json({ status: 'ok', time: new Date().toI
 // ── Serve React App ───────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, '../dist')));
 
-// SPA fallback - serve index.html for all unmatched routes (Express 5.x syntax)
-app.get('/:path*', (_, res) => {
-  res.sendFile(path.join(__dirname, '../dist/index.html'));
+// SPA fallback - serve index.html for all unmatched non-API routes
+app.use((req, res, next) => {
+  if (req.path.startsWith('/api')) {
+    return next();
+  }
+  return res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 app.listen(PORT, () => {
   console.log(`🦈 Cá Mập API running at http://localhost:${PORT}`);
