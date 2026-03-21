@@ -296,7 +296,7 @@ export default function ComicDetail() {
               {related.map(r => (
                 <Link to={`/comic/${r.id}`} key={r.id} className="rel-card">
                   <div className="rel-img-wrap">
-                    <img src={r.cover_url} alt={r.title} className="rel-img" />
+                    <img src={r.home_cover_url || r.cover_url} alt={r.title} className="rel-img" />
                     <span className={`rel-badge ${r.status === 'completed' ? 'rb-done' : 'rb-ongoing'}`}>
                       {r.status === 'completed' ? 'Hoàn Thành' : 'Đang ra'}
                     </span>
