@@ -89,10 +89,10 @@ body.reading-guarded a {
 
 .chapter-text-wrap {
   margin: 0.95rem 0 0;
-  border-radius: 0;
-  border: none;
-  background: transparent;
-  padding: 0;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.05);
+  background: rgb(58 59 60 / .6);
+  padding: 0.85rem 0.95rem;
 }
 
 .chapter-subtitle {
