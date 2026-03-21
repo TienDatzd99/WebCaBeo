@@ -72,9 +72,10 @@ export default function AdminComics() {
       if (comicModal === 'create') {
         const normalizedAuthor = (form.author || '').trim();
         const normalizedTranslator = (form.translator || '').trim();
+        const fallbackAuthor = normalizedAuthor || normalizedTranslator || ' ';
         const payload = {
           ...form,
-          author: normalizedAuthor,
+          author: fallbackAuthor,
           translator: normalizedTranslator,
           chapters: (form.initial_chapters || [])
             .map((ch) => ({
@@ -100,10 +101,12 @@ export default function AdminComics() {
         }
       }
       else {
+        const normalizedAuthor = (form.author || '').trim();
+        const normalizedTranslator = (form.translator || '').trim();
         await updateComic(comicModal.id, {
           ...form,
-          author: (form.author || '').trim(),
-          translator: (form.translator || '').trim(),
+          author: normalizedAuthor || normalizedTranslator || ' ',
+          translator: normalizedTranslator,
         });
       }
       setComicModal(null);
