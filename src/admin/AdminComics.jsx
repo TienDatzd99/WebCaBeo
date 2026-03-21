@@ -199,9 +199,17 @@ export default function AdminComics() {
     setCropError('');
   }, []);
 
-  const openCropper = () => {
-    resetCropperState();
+  const openCropper = async () => {
     setCropModalOpen(true);
+    setCropError('');
+
+    const currentCover = (form.cover_url || '').trim();
+    if (!currentCover) {
+      resetCropperState();
+      return;
+    }
+
+    await loadCropImage(currentCover, 'Ảnh bìa hiện tại');
   };
 
   const loadCropImage = useCallback(async (source, label) => {
@@ -451,9 +459,7 @@ export default function AdminComics() {
                   <button
                     type="button"
                     className="btn-sm btn-view"
-                    onClick={() => {
-                      setCropModalOpen(true);
-                    }}
+                    onClick={openCropper}
                   >
                     Mở khung cắt ảnh
                   </button>
