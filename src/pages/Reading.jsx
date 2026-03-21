@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { FiLoader } from 'react-icons/fi';
 import { getChapter, markChapterRead } from '../api/chapters.js';
+import { getComicChapters } from '../api/comics.js';
 import { reportSecurityFlag } from '../api/auth.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import './Reading.css';
@@ -12,13 +13,17 @@ const Reading = () => {
   const { user, logoutUser } = useAuth();
   const navigate = useNavigate();
   const [chapter, setChapter] = useState(null);
+  const [chapters, setChapters] = useState([]);
   const [loading, setLoading] = useState(true);
   const [blocked, setBlocked] = useState(false);
+  const [hasReachedEnd, setHasReachedEnd] = useState(false);
   const hasReportedRef = useRef(false);
+  const endTriggerRef = useRef(null);
 
   useEffect(() => {
     setLoading(true);
     setChapter(null);
+    setHasReachedEnd(false);
     getChapter(chapterId)
       .then(r => {
         setChapter(r.data);
@@ -28,6 +33,12 @@ const Reading = () => {
       .finally(() => setLoading(false));
     window.scrollTo(0, 0);
   }, [chapterId, user]);
+
+  useEffect(() => {
+    getComicChapters(id)
+      .then((r) => setChapters(r.data || []))
+      .catch(() => setChapters([]));
+  }, [id]);
 
   useEffect(() => {
     if (!blocked || hasReportedRef.current) return;
@@ -102,6 +113,27 @@ const Reading = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const node = endTriggerRef.current;
+    if (!node) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries.some((entry) => entry.isIntersecting);
+        if (visible) {
+          setHasReachedEnd(true);
+        }
+      },
+      {
+        root: null,
+        threshold: 0.85,
+      }
+    );
+
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [chapterId]);
+
   const goTo = useCallback((cId) => navigate(`/read/${id}/${cId}`), [id, navigate]);
 
   if (loading) return (
@@ -164,7 +196,44 @@ const Reading = () => {
           ) : (
             <p className="chapter-text-empty">Nội dung chương đang được cập nhật.</p>
           )}
+
+          <div ref={endTriggerRef} className="chapter-end-anchor" aria-hidden="true" />
         </article>
+
+        {hasReachedEnd && (
+          <div className="chapter-end-nav">
+            <button
+              className="novel-nav-btn"
+              disabled={!chapter.prevChapter}
+              onClick={() => chapter.prevChapter && goTo(chapter.prevChapter.id)}
+            >
+              <FiChevronLeft /> Chương trước
+            </button>
+
+            <select
+              className="chapter-select"
+              value={String(chapter.id)}
+              onChange={(e) => goTo(e.target.value)}
+            >
+              {chapters
+                .slice()
+                .sort((a, b) => Number(a.number) - Number(b.number))
+                .map((ch) => (
+                  <option key={ch.id} value={String(ch.id)}>
+                    Chương {ch.number}
+                  </option>
+                ))}
+            </select>
+
+            <button
+              className="novel-nav-btn"
+              disabled={!chapter.nextChapter}
+              onClick={() => chapter.nextChapter && goTo(chapter.nextChapter.id)}
+            >
+              Chương sau <FiChevronRight />
+            </button>
+          </div>
+        )}
       </section>
     </div>
   );
