@@ -201,7 +201,8 @@
   font-size: 0.77rem;
   line-height: 1.65;
   margin-bottom: 0.85rem;
-  max-width: 96%;
+  max-width: none;
+  width: 100%;
 }
 
 /* ── Stats bar (inside meta col) ── */
