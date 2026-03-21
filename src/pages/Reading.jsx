@@ -134,6 +134,35 @@ const Reading = () => {
     return () => observer.disconnect();
   }, [chapterId]);
 
+  useEffect(() => {
+    if (hasReachedEnd) return;
+
+    const checkNearBottom = () => {
+      const doc = document.documentElement;
+      const scrollTop = window.scrollY || doc.scrollTop || 0;
+      const viewportHeight = window.innerHeight || doc.clientHeight || 0;
+      const pageHeight = Math.max(doc.scrollHeight || 0, document.body.scrollHeight || 0);
+
+      if (pageHeight <= viewportHeight + 40) {
+        setHasReachedEnd(true);
+        return;
+      }
+
+      const nearBottom = scrollTop + viewportHeight >= pageHeight - 120;
+      if (nearBottom) {
+        setHasReachedEnd(true);
+      }
+    };
+
+    checkNearBottom();
+    window.addEventListener('scroll', checkNearBottom, { passive: true });
+    window.addEventListener('resize', checkNearBottom);
+    return () => {
+      window.removeEventListener('scroll', checkNearBottom);
+      window.removeEventListener('resize', checkNearBottom);
+    };
+  }, [chapterId, hasReachedEnd]);
+
   const goTo = useCallback((cId) => navigate(`/read/${id}/${cId}`), [id, navigate]);
 
   if (loading) return (
