@@ -13,12 +13,14 @@ const enrichComic = (comic) => {
     WHERE cg.comic_id = ?
   `).all(comic.id);
   const ratingRow = db.prepare('SELECT AVG(score) as avg, COUNT(*) as cnt FROM ratings WHERE comic_id = ?').get(comic.id);
+  const chapterRow = db.prepare('SELECT COUNT(*) as cnt FROM chapters WHERE comic_id = ?').get(comic.id);
   const latestChap = db.prepare('SELECT number FROM chapters WHERE comic_id = ? ORDER BY number DESC LIMIT 1').get(comic.id);
   return {
     ...comic,
     genres,
     rating: ratingRow.avg ? parseFloat(ratingRow.avg.toFixed(1)) : null,
     ratingCount: ratingRow.cnt,
+    chapterCount: chapterRow.cnt,
     latestChapter: latestChap ? latestChap.number : null,
   };
 };
