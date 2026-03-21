@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiPlus, FiEdit2, FiTrash2, FiList, FiX, FiSearch } from 'react-icons/fi';
 import {
@@ -18,8 +18,14 @@ const STATUS_OPTIONS = [
   { value: 'completed', label: 'Hoàn thành', badge: 'badge-completed' },
   { value: 'hiatus', label: 'Tạm ngưng', badge: 'badge-hiatus' },
 ];
-const COVER_CROP_WIDTH = 320;
-const COVER_CROP_HEIGHT = 480;
+const CROP_BASE_WIDTH = 360;
+const ASPECT_OPTIONS = [
+  { id: '2:3', label: '2:3 (dọc)', width: 2, height: 3 },
+  { id: '16:9', label: '16:9', width: 16, height: 9 },
+  { id: '16:10', label: '16:10', width: 16, height: 10 },
+  { id: '4:5', label: '4:5', width: 4, height: 5 },
+  { id: '1:1', label: '1:1', width: 1, height: 1 },
+];
 
 const getStatusMeta = (status) =>
   STATUS_OPTIONS.find((opt) => opt.value === status) || STATUS_OPTIONS[0];
@@ -47,13 +53,23 @@ export default function AdminComics() {
   const [cropZoom, setCropZoom] = useState(1);
   const [cropOffsetX, setCropOffsetX] = useState(0);
   const [cropOffsetY, setCropOffsetY] = useState(0);
+  const [cropAspect, setCropAspect] = useState(ASPECT_OPTIONS[0].id);
   const [cropLoading, setCropLoading] = useState(false);
   const [cropError, setCropError] = useState('');
-  const coverFileInputRef = useRef(null);
   const visibleCoverInputRef = useRef(null);
   const cropCanvasRef = useRef(null);
 
   const LIMIT = 15;
+  const selectedAspect = useMemo(
+    () => ASPECT_OPTIONS.find((option) => option.id === cropAspect) || ASPECT_OPTIONS[0],
+    [cropAspect]
+  );
+
+  const cropSize = useMemo(() => {
+    const width = CROP_BASE_WIDTH;
+    const height = Math.round((width * selectedAspect.height) / selectedAspect.width);
+    return { width, height };
+  }, [selectedAspect]);
 
   const load = useCallback(() => {
     setLoading(true);
@@ -168,6 +184,7 @@ export default function AdminComics() {
     setCropZoom(1);
     setCropOffsetX(0);
     setCropOffsetY(0);
+    setCropAspect(ASPECT_OPTIONS[0].id);
     setCropLoading(false);
     setCropError('');
   }, []);
@@ -179,16 +196,18 @@ export default function AdminComics() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    const baseScale = Math.max(COVER_CROP_WIDTH / image.width, COVER_CROP_HEIGHT / image.height);
+    const canvasWidth = canvas.width;
+    const canvasHeight = canvas.height;
+    const baseScale = Math.max(canvasWidth / image.width, canvasHeight / image.height);
     const finalScale = baseScale * zoom;
     const drawWidth = image.width * finalScale;
     const drawHeight = image.height * finalScale;
-    const dx = (COVER_CROP_WIDTH - drawWidth) / 2 + (offsetX / 100) * COVER_CROP_WIDTH;
-    const dy = (COVER_CROP_HEIGHT - drawHeight) / 2 + (offsetY / 100) * COVER_CROP_HEIGHT;
+    const dx = (canvasWidth - drawWidth) / 2 + (offsetX / 100) * canvasWidth;
+    const dy = (canvasHeight - drawHeight) / 2 + (offsetY / 100) * canvasHeight;
 
-    ctx.clearRect(0, 0, COVER_CROP_WIDTH, COVER_CROP_HEIGHT);
+    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
     ctx.fillStyle = '#111827';
-    ctx.fillRect(0, 0, COVER_CROP_WIDTH, COVER_CROP_HEIGHT);
+    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
     ctx.drawImage(image, dx, dy, drawWidth, drawHeight);
   }, []);
 
@@ -225,9 +244,15 @@ export default function AdminComics() {
   const onPickCoverFile = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    setCropModalOpen(true);
+    setCropError('');
     const reader = new FileReader();
     reader.onload = async () => {
-      await loadCropImage(String(reader.result || ''), file.name);
+      const source = String(reader.result || '');
+      if (!source) return;
+      // Show selected image on form immediately, then allow optional crop refinement.
+      setForm((f) => ({ ...f, cover_url: source }));
+      await loadCropImage(source, file.name);
     };
     reader.readAsDataURL(file);
     event.target.value = '';
@@ -259,7 +284,7 @@ export default function AdminComics() {
   useEffect(() => {
     if (!cropModalOpen || !cropImage) return;
     drawCropPreview(cropImage, cropZoom, cropOffsetX, cropOffsetY);
-  }, [cropModalOpen, cropImage, cropZoom, cropOffsetX, cropOffsetY, drawCropPreview]);
+  }, [cropModalOpen, cropImage, cropZoom, cropOffsetX, cropOffsetY, cropSize, drawCropPreview]);
 
   /* Chapter modal */
   const openChaps = async (comic) => {
@@ -405,6 +430,12 @@ export default function AdminComics() {
                     onChange={onPickCoverFile}
                   />
                 </div>
+                {!!form.cover_url && (
+                  <div className="cover-form-preview">
+                    <img src={form.cover_url} alt="Preview ảnh bìa" className="cover-form-preview-img" />
+                    <span className="cover-tools-help">Preview ảnh bìa hiện tại trong form.</span>
+                  </div>
+                )}
                 <div className="cover-tools">
                   <button
                     type="button"
@@ -427,13 +458,6 @@ export default function AdminComics() {
                     Lấy vùng từ URL hiện tại
                   </button>
                   <span className="cover-tools-help">Ảnh sẽ cắt theo khung bìa dọc 2:3.</span>
-                  <input
-                    ref={coverFileInputRef}
-                    type="file"
-                    accept="image/*"
-                    style={{ display:'none' }}
-                    onChange={onPickCoverFile}
-                  />
                 </div>
               </div>
               <div className="form-group">
@@ -553,8 +577,8 @@ export default function AdminComics() {
                 <div className="cover-crop-preview-wrap">
                   <canvas
                     ref={cropCanvasRef}
-                    width={COVER_CROP_WIDTH}
-                    height={COVER_CROP_HEIGHT}
+                    width={cropSize.width}
+                    height={cropSize.height}
                     className="cover-crop-canvas"
                   />
                 </div>
@@ -565,6 +589,22 @@ export default function AdminComics() {
                   <button type="button" className="btn-sm btn-view" onClick={() => visibleCoverInputRef.current?.click()}>
                     Chọn ảnh khác từ máy
                   </button>
+
+                  <div className="cover-crop-control">
+                    <label className="form-label">Tỉ lệ khung</label>
+                    <div className="aspect-buttons">
+                      {ASPECT_OPTIONS.map((option) => (
+                        <button
+                          key={option.id}
+                          type="button"
+                          className={`aspect-btn ${cropAspect === option.id ? 'active' : ''}`}
+                          onClick={() => setCropAspect(option.id)}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
                   <div className="cover-crop-control">
                     <label className="form-label">Zoom</label>
