@@ -3,7 +3,7 @@
 ─────────────────────────────────────────────── */
 .cd-page {
   min-height: 100vh;
-  background: radial-gradient(circle at 20% 15%, #5a4726 0%, #231f19 34%, #14161c 70%, #101218 100%);
+  background: #171a22;
   padding: 1.4rem 0 3rem;
 }
 .cd-center { display:flex; align-items:center; justify-content:center; min-height:60vh; color:var(--text-muted); }
@@ -24,10 +24,10 @@
   overflow: hidden;
   width: min(1040px, 94vw);
   margin: 0 auto;
-  border-radius: 14px;
-  background: linear-gradient(to right, rgba(23,18,14,0.94), rgba(20,22,28,0.92));
-  border: 1px solid rgba(255,255,255,0.08);
-  box-shadow: 0 30px 70px rgba(0,0,0,0.45);
+  border-radius: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
   padding: 1.35rem 1.45rem;
 }
 
@@ -39,14 +39,14 @@
   background-position: center;
   filter: blur(42px) saturate(0.55) brightness(0.55);
   transform: scale(1.1);
-  opacity: 0.35;
+  opacity: 0.18;
 }
 
 /* Vignette overlay — let some warmth through */
 .cd-hero-veil {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to right, rgba(19,14,10,0.9), rgba(16,19,27,0.7));
+  background: transparent;
 }
 
 .cd-hero-body {
@@ -200,8 +200,8 @@
 .cd-stats-bar {
   display: flex;
   align-items: center;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.07);
+  background: transparent;
+  border: none;
   border-radius: 5px;
   padding: 0.42rem 0;
   overflow: hidden;
@@ -226,7 +226,7 @@
 .sd {
   width: 1px;
   height: 1.35rem;
-  background: rgba(255,255,255,0.07);
+  background: rgba(255,255,255,0.12);
   flex-shrink: 0;
 }
 
