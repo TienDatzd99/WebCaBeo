@@ -84,7 +84,7 @@ const CARD_DNA = [
                         )}
 
                         <div className="grid grid-cols-12 gap-4 relative z-10 px-4 sm:px-8 lg:px-16 xl:px-24 w-full">
-                            <div className="hidden sm:block col-span-12 sm:col-span-5 lg:col-span-4 xl:col-span-3 z-20 text-white">
+                            <div className="hidden sm:block col-span-12 sm:col-span-5 lg:col-span-4 xl:col-span-3 z-20 mt-8 text-white">
                                 {activeComic && (
                                     <>
                                         <h1 className="font-bold mt-4 mb-4 drop-shadow-lg text-[1.5rem] font-sans">

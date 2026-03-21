@@ -1,23 +1,19 @@
 import { Router } from 'express';
 import db from '../db.js';
-import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
-import { JWT_SECRET as SECRET } from '../middleware/auth.js';
+import { verifyAccessToken } from '../middleware/auth.js';
 
 const router = Router();
 
 /* ── Admin auth middleware ─────────────────────── */
 function adminOnly(req, res, next) {
-  try {
-    const token = req.headers.authorization?.split(' ')[1];
-    if (!token) return res.status(401).json({ error: 'No token' });
-    const decoded = jwt.verify(token, SECRET);
-    if (decoded.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
-    req.user = decoded;
-    next();
-  } catch {
-    res.status(401).json({ error: 'Invalid token' });
-  }
+  const token = req.headers.authorization?.split(' ')[1];
+  if (!token) return res.status(401).json({ error: 'No token' });
+  const decoded = verifyAccessToken(token);
+  if (!decoded) return res.status(401).json({ error: 'Invalid token' });
+  if (decoded.role !== 'admin') return res.status(403).json({ error: 'Admin only' });
+  req.user = decoded;
+  next();
 }
 
 router.use(adminOnly);
@@ -93,18 +89,54 @@ router.get('/comics/:id', (req, res) => {
 });
 
 router.post('/comics', (req, res) => {
-  const { title, author, description, cover_url, audio_url, status, genre_ids = [] } = req.body;
+  const {
+    title,
+    author,
+    description,
+    cover_url,
+    audio_url,
+    status,
+    genre_ids = [],
+    chapters = []
+  } = req.body;
   if (!title || !author) return res.status(400).json({ error: 'title and author required' });
 
-  const info = db.prepare(`
+  const insertComic = db.prepare(`
     INSERT INTO comics (title, author, description, cover_url, audio_url, status)
     VALUES (?, ?, ?, ?, ?, ?)
-  `).run(title, author, description || '', cover_url || '', audio_url || '', status || 'ongoing');
-
-  const id = info.lastInsertRowid;
+  `);
   const insG = db.prepare('INSERT OR IGNORE INTO comic_genres VALUES (?, ?)');
-  genre_ids.forEach(gid => insG.run(id, gid));
+  const insertChapter = db.prepare(
+    'INSERT INTO chapters (comic_id, number, title, content) VALUES (?, ?, ?, ?)'
+  );
 
+  const tx = db.transaction(() => {
+    const info = insertComic.run(
+      title,
+      author,
+      description || '',
+      cover_url || '',
+      audio_url || '',
+      status || 'ongoing'
+    );
+
+    const id = info.lastInsertRowid;
+    genre_ids.forEach((gid) => insG.run(id, gid));
+
+    if (Array.isArray(chapters)) {
+      chapters.forEach((ch) => {
+        const number = Number(ch?.number);
+        if (!Number.isFinite(number)) return;
+        const chapterTitle = (ch?.title || '').trim() || `Chapter ${number}`;
+        const chapterContent = (ch?.content || '').trim();
+        insertChapter.run(id, number, chapterTitle, chapterContent);
+      });
+    }
+
+    return id;
+  });
+
+  const id = tx();
   res.json({ id, message: 'Comic created' });
 });
 
@@ -195,18 +227,18 @@ router.get('/comics/:comicId/chapters', (req, res) => {
 });
 
 router.post('/comics/:comicId/chapters', (req, res) => {
-  const { number, title } = req.body;
+  const { number, title, content } = req.body;
   if (!number) return res.status(400).json({ error: 'number required' });
   const info = db.prepare(
-    'INSERT INTO chapters (comic_id, number, title) VALUES (?, ?, ?)'
-  ).run(req.params.comicId, number, title || `Chapter ${number}`);
+    'INSERT INTO chapters (comic_id, number, title, content) VALUES (?, ?, ?, ?)'
+  ).run(req.params.comicId, number, title || `Chapter ${number}`, content || '');
   res.json({ id: info.lastInsertRowid, message: 'Chapter created' });
 });
 
 router.put('/chapters/:id', (req, res) => {
-  const { number, title } = req.body;
-  db.prepare('UPDATE chapters SET number=?, title=? WHERE id=?')
-    .run(number, title, req.params.id);
+  const { number, title, content } = req.body;
+  db.prepare('UPDATE chapters SET number=?, title=?, content=? WHERE id=?')
+    .run(number, title, content || '', req.params.id);
   res.json({ message: 'Updated' });
 });
 

@@ -15,6 +15,8 @@ const STATUS = {
   ongoing:   { label: 'Đang Ra',    cls: 'st-ongoing' },
 };
 
+const DEFAULT_AUDIO_URL = 'https://www.youtube.com/@CaBeoAudio';
+
 export default function ComicDetail() {
   const { id }       = useParams();
   const { user }     = useAuth();
@@ -77,7 +79,7 @@ export default function ComicDetail() {
     ? (comic.audio_url.startsWith('http://') || comic.audio_url.startsWith('https://')
       ? comic.audio_url
       : `https://${comic.audio_url}`)
-    : '';
+    : DEFAULT_AUDIO_URL;
 
   /* fake reviews for demo */
   const reviews = [
@@ -132,11 +134,9 @@ export default function ComicDetail() {
             {/* Action buttons */}
             <div className="cd-actions">
               {firstChap  && <Link to={`/read/${id}/${firstChap.id}`}  className="cd-btn-primary">▶ Bắt đầu đọc</Link>}
-              {audioHref && (
-                <a href={audioHref} target="_blank" rel="noreferrer" className="cd-btn-red">
-                  ▶ Nghe audio
-                </a>
-              )}
+              <a href={audioHref} target="_blank" rel="noreferrer" className="cd-btn-red">
+                ▶ Nghe audio
+              </a>
               {latestChap && <Link to={`/read/${id}/${latestChap.id}`} className="cd-btn-red">▶ Đọc mới nhất</Link>}
               <button className={`cd-btn-glass ${faved ? 'faved' : ''}`} onClick={toggleFav}>
                 <FiHeart size={14}/> Yêu thích

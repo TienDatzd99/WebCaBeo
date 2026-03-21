@@ -16,8 +16,9 @@ const Footer = () => (
         </div>
         <div className="footer-col">
           <h4>Liên hệ</h4>
-          <Link to="#">Facebook</Link>
-          <Link to="#">Discord</Link>
+          <a href="https://www.facebook.com/profile.php?id=61586729744459" target="_blank" rel="noreferrer">Fanpage</a>
+          <a href="https://www.youtube.com/@CaBeoAudio" target="_blank" rel="noreferrer">Youtube</a>
+          <a href="https://www.tiktok.com/@cabeoaudio" target="_blank" rel="noreferrer">TikTok</a>
         </div>
         <div className="footer-col">
           <h4>Chính sách</h4>

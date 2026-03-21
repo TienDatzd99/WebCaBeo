@@ -51,6 +51,7 @@ db.exec(`
     comic_id   INTEGER REFERENCES comics(id) ON DELETE CASCADE,
     number     REAL    NOT NULL,
     title      TEXT,
+    content    TEXT,
     views      INTEGER DEFAULT 0,
     created_at TEXT    DEFAULT (datetime('now'))
   );
@@ -84,6 +85,13 @@ db.exec(`
     PRIMARY KEY (user_id, comic_id)
   );
 
+  CREATE TABLE IF NOT EXISTS token_revocations (
+    jti         TEXT PRIMARY KEY,
+    user_id     INTEGER REFERENCES users(id) ON DELETE SET NULL,
+    reason      TEXT,
+    created_at  TEXT DEFAULT (datetime('now'))
+  );
+
   CREATE TABLE IF NOT EXISTS home_sliders (
     id         INTEGER PRIMARY KEY AUTOINCREMENT,
     comic_id   INTEGER NOT NULL UNIQUE REFERENCES comics(id) ON DELETE CASCADE,
@@ -97,6 +105,11 @@ db.exec(`
 const comicCols = db.prepare("PRAGMA table_info('comics')").all();
 if (!comicCols.some((c) => c.name === 'audio_url')) {
   db.exec('ALTER TABLE comics ADD COLUMN audio_url TEXT');
+}
+
+const chapterCols = db.prepare("PRAGMA table_info('chapters')").all();
+if (!chapterCols.some((c) => c.name === 'content')) {
+  db.exec('ALTER TABLE chapters ADD COLUMN content TEXT');
 }
 
 // ── SEED ─────────────────────────────────────────────────────────────────────

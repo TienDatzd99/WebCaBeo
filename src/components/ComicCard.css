@@ -92,8 +92,9 @@
 .card-pt {
   display: flex;
   flex-direction: column;
-  background: var(--bg-card);
-  border-radius: var(--radius-md);
+  background: #2f3138;
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 10px;
   overflow: hidden;
   transition: transform 0.22s var(--ease), box-shadow 0.22s var(--ease);
 }
@@ -103,7 +104,7 @@
   position: relative;
   aspect-ratio: 4/3;
   overflow: hidden;
-  background: #1a1a1a;
+  background: #1f2127;
 }
 .card-pt-img img {
   width: 100%;
@@ -114,7 +115,7 @@
 .card-pt:hover .card-pt-img img { transform: scale(1.04); }
 
 .card-pt-info {
-  background: var(--bg-card-info);
+  background: #363940;
   padding: 0.7rem 0.85rem 0.75rem;
 }
 .card-pt-row1 {

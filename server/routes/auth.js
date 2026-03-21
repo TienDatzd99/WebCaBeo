@@ -1,10 +1,17 @@
 import express from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import { randomUUID } from 'crypto';
 import db from '../db.js';
-import { JWT_SECRET } from '../middleware/auth.js';
+import { JWT_SECRET, authenticateToken, revokeAccessToken } from '../middleware/auth.js';
 
 const router = express.Router();
+
+const signToken = (user) => jwt.sign(
+  { id: user.id, username: user.username, role: user.role, jti: randomUUID() },
+  JWT_SECRET,
+  { expiresIn: '7d' }
+);
 
 // POST /api/auth/register
 router.post('/register', (req, res) => {
@@ -20,7 +27,7 @@ router.post('/register', (req, res) => {
   const hash = bcrypt.hashSync(password, 10);
   const result = db.prepare('INSERT INTO users (username, email, password) VALUES (?, ?, ?)').run(username, email, hash);
   const user = db.prepare('SELECT id, username, email, avatar, role FROM users WHERE id = ?').get(result.lastInsertRowid);
-  const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+  const token = signToken(user);
   res.status(201).json({ token, user });
 });
 
@@ -37,23 +44,22 @@ router.post('/login', (req, res) => {
   if (!valid) return res.status(401).json({ error: 'Email hoặc mật khẩu không đúng' });
 
   const { password: _pw, ...safeUser } = user;
-  const token = jwt.sign({ id: user.id, username: user.username, role: user.role }, JWT_SECRET, { expiresIn: '7d' });
+  const token = signToken(user);
   res.json({ token, user: safeUser });
 });
 
 // GET /api/auth/me
-router.get('/me', (req, res) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  if (!token) return res.status(401).json({ error: 'Unauthorized' });
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const user = db.prepare('SELECT id, username, email, avatar, role, created_at FROM users WHERE id = ?').get(decoded.id);
-    if (!user) return res.status(404).json({ error: 'User not found' });
-    res.json(user);
-  } catch {
-    res.status(403).json({ error: 'Invalid token' });
-  }
+router.get('/me', authenticateToken, (req, res) => {
+  const user = db.prepare('SELECT id, username, email, avatar, role, created_at FROM users WHERE id = ?').get(req.user.id);
+  if (!user) return res.status(404).json({ error: 'User not found' });
+  res.json(user);
+});
+
+// POST /api/auth/security-flag
+router.post('/security-flag', authenticateToken, (req, res) => {
+  const { reason = 'devtools-detected' } = req.body || {};
+  const revoked = revokeAccessToken(req.token, reason);
+  res.json({ success: true, revoked });
 });
 
 export default router;

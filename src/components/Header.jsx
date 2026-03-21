@@ -62,8 +62,9 @@ const Header = () => {
           <Link to="/truyen-ngan"  className="nav-link">Truyện Ngắn</Link>
           <Link to="/truyen-dai"   className="nav-link">Truyện Dài</Link>
           <Link to="/team"         className="nav-link">Team</Link>
-          <Link to="/fanpage"      className="nav-link">Fanpage</Link>
-          <Link to="/youtube"      className="nav-link">Youtube</Link>
+          <a href="https://www.facebook.com/profile.php?id=61586729744459" target="_blank" rel="noreferrer" className="nav-link">Fanpage</a>
+          <a href="https://www.youtube.com/@CaBeoAudio" target="_blank" rel="noreferrer" className="nav-link">Youtube</a>
+          <a href="https://www.tiktok.com/@cabeoaudio" target="_blank" rel="noreferrer" className="nav-link">TikTok</a>
         </nav>
 
         {/* Right cluster */}
@@ -129,6 +130,9 @@ const Header = () => {
           <Link to="/the-loai"    className="mob-link" onClick={() => setMobileMenuOpen(false)}>Thể Loại</Link>
           <Link to="/truyen-ngan" className="mob-link" onClick={() => setMobileMenuOpen(false)}>Truyện Ngắn</Link>
           <Link to="/truyen-dai"  className="mob-link" onClick={() => setMobileMenuOpen(false)}>Truyện Dài</Link>
+          <a href="https://www.facebook.com/profile.php?id=61586729744459" className="mob-link" target="_blank" rel="noreferrer" onClick={() => setMobileMenuOpen(false)}>Fanpage</a>
+          <a href="https://www.youtube.com/@CaBeoAudio" className="mob-link" target="_blank" rel="noreferrer" onClick={() => setMobileMenuOpen(false)}>Youtube</a>
+          <a href="https://www.tiktok.com/@cabeoaudio" className="mob-link" target="_blank" rel="noreferrer" onClick={() => setMobileMenuOpen(false)}>TikTok</a>
           {!user ? (
             <Link to="/login" className="mob-link accent" onClick={() => setMobileMenuOpen(false)}>Đăng nhập</Link>
           ) : (

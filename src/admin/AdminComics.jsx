@@ -7,8 +7,12 @@ import {
   getAdminGenres
 } from '../api/admin.js';
 
-const EMPTY_COMIC = { title:'', author:'', description:'', cover_url:'', audio_url:'', status:'ongoing', genre_ids:[] };
-const EMPTY_CHAP  = { number:'', title:'' };
+const EMPTY_COMIC = {
+  title:'', author:'', description:'', cover_url:'', audio_url:'', status:'ongoing', genre_ids:[],
+  initial_chapters: []
+};
+const EMPTY_CHAP  = { number:'', title:'', content:'' };
+const EMPTY_INITIAL_CHAP = { number:'', title:'', content:'' };
 const STATUS_OPTIONS = [
   { value: 'ongoing', label: 'Đang ra', badge: 'badge-ongoing' },
   { value: 'completed', label: 'Hoàn thành', badge: 'badge-completed' },
@@ -33,6 +37,7 @@ export default function AdminComics() {
   const [editChap,   setEditChap]   = useState(null);
   const [form,       setForm]       = useState(EMPTY_COMIC);
   const [chapForm,   setChapForm]   = useState(EMPTY_CHAP);
+  const [newInitChap, setNewInitChap] = useState(EMPTY_INITIAL_CHAP);
   const [saving,     setSaving]     = useState(false);
 
   const LIMIT = 15;
@@ -48,19 +53,64 @@ export default function AdminComics() {
   useEffect(() => { getAdminGenres().then(r => setGenres(r.data)); }, []);
 
   /* Comic form */
-  const openCreate = () => { setForm(EMPTY_COMIC); setComicModal('create'); };
+  const openCreate = () => {
+    setForm(EMPTY_COMIC);
+    setNewInitChap(EMPTY_INITIAL_CHAP);
+    setComicModal('create');
+  };
   const openEdit   = (c) => {
-    setForm({ ...c, genre_ids: (c.genre_names || '').split(',').map(g => genres.find(x => x.name === g.trim())?.id).filter(Boolean) });
+    setForm({
+      ...c,
+      genre_ids: (c.genre_names || '').split(',').map(g => genres.find(x => x.name === g.trim())?.id).filter(Boolean),
+      initial_chapters: []
+    });
     setComicModal(c);
   };
   const saveComic = async () => {
     setSaving(true);
     try {
-      if (comicModal === 'create') await createComic(form);
+      if (comicModal === 'create') {
+        const payload = {
+          ...form,
+          chapters: (form.initial_chapters || [])
+            .map((ch) => ({
+              number: Number(ch.number),
+              title: (ch.title || '').trim(),
+              content: (ch.content || '').trim(),
+            }))
+            .filter((ch) => Number.isFinite(ch.number)),
+        };
+        await createComic(payload);
+      }
       else await updateComic(comicModal.id, form);
       setComicModal(null);
       load();
     } finally { setSaving(false); }
+  };
+
+  const addInitialChapter = () => {
+    const number = Number(newInitChap.number);
+    if (!Number.isFinite(number)) return;
+
+    setForm((f) => ({
+      ...f,
+      initial_chapters: [
+        ...(f.initial_chapters || []).filter((ch) => Number(ch.number) !== number),
+        {
+          number,
+          title: (newInitChap.title || '').trim(),
+          content: (newInitChap.content || '').trim(),
+        }
+      ].sort((a, b) => Number(a.number) - Number(b.number))
+    }));
+    setNewInitChap(EMPTY_INITIAL_CHAP);
+  };
+
+  const removeInitialChapter = (number) => {
+    setForm((f) => ({
+      ...f,
+      initial_chapters: (f.initial_chapters || []).filter((ch) => Number(ch.number) !== Number(number))
+    }));
   };
   const delComic = async (id) => {
     if (!confirm('Xóa truyện này?')) return;
@@ -237,6 +287,65 @@ export default function AdminComics() {
                 <label className="form-label">Mô tả</label>
                 <textarea className="form-textarea" value={form.description} onChange={e => setForm(f => ({...f,description:e.target.value}))} placeholder="Tóm tắt nội dung..." />
               </div>
+
+              {comicModal === 'create' && (
+                <div className="form-group">
+                  <label className="form-label">Nội dung theo chương (tuỳ chọn)</label>
+                  <div style={{ background:'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.08)', borderRadius:8, padding:'0.8rem' }}>
+                    <div className="form-row">
+                      <div className="form-group" style={{ marginBottom:0 }}>
+                        <label className="form-label">Số chương *</label>
+                        <input
+                          className="form-input"
+                          type="number"
+                          value={newInitChap.number}
+                          onChange={e => setNewInitChap((v) => ({ ...v, number: e.target.value }))}
+                          placeholder="1"
+                        />
+                      </div>
+                      <div className="form-group" style={{ marginBottom:0 }}>
+                        <label className="form-label">Tiêu đề chương</label>
+                        <input
+                          className="form-input"
+                          value={newInitChap.title}
+                          onChange={e => setNewInitChap((v) => ({ ...v, title: e.target.value }))}
+                          placeholder="Mở đầu"
+                        />
+                      </div>
+                    </div>
+                    <div className="form-group" style={{ marginTop:'0.75rem', marginBottom:'0.75rem' }}>
+                      <label className="form-label">Nội dung chương</label>
+                      <textarea
+                        className="form-textarea"
+                        value={newInitChap.content}
+                        onChange={e => setNewInitChap((v) => ({ ...v, content: e.target.value }))}
+                        placeholder="Nhập nội dung truyện ngắn cho chương này..."
+                        style={{ minHeight: 130 }}
+                      />
+                    </div>
+                    <button type="button" className="btn-primary" onClick={addInitialChapter}>
+                      <FiPlus /> Thêm vào danh sách chương
+                    </button>
+
+                    <div style={{ marginTop:'0.8rem', display:'grid', gap:'0.45rem' }}>
+                      {(form.initial_chapters || []).length === 0 && (
+                        <div style={{ color:'#6b7280', fontSize:'0.78rem' }}>Chưa thêm chương nào. Bạn vẫn có thể tạo truyện trước rồi thêm chương sau.</div>
+                      )}
+                      {(form.initial_chapters || []).map((ch) => (
+                        <div key={ch.number} style={{ display:'flex', justifyContent:'space-between', gap:'0.6rem', alignItems:'center', background:'rgba(255,255,255,0.04)', borderRadius:8, padding:'0.5rem 0.65rem' }}>
+                          <div>
+                            <div style={{ fontSize:'0.82rem', color:'#a5b4fc', fontWeight:600 }}>Ch.{ch.number} {ch.title ? `- ${ch.title}` : ''}</div>
+                            <div style={{ fontSize:'0.75rem', color:'#9ca3af' }}>{ch.content ? `${ch.content.length} ký tự nội dung` : 'Chưa có nội dung text'}</div>
+                          </div>
+                          <button type="button" className="btn-sm btn-delete" onClick={() => removeInitialChapter(ch.number)}>
+                            <FiTrash2 /> Xóa
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
             <div className="modal-footer">
               <button className="btn-sm btn-edit" onClick={() => setComicModal(null)}>Hủy</button>
@@ -274,6 +383,16 @@ export default function AdminComics() {
                       onChange={e => setChapForm(f => ({...f,title:e.target.value}))} placeholder="Tuỳ chọn" />
                   </div>
                 </div>
+                <div className="form-group" style={{ marginTop:'0.75rem', marginBottom:0 }}>
+                  <label className="form-label">Nội dung chương (truyện chữ)</label>
+                  <textarea
+                    className="form-textarea"
+                    value={chapForm.content}
+                    onChange={e => setChapForm(f => ({...f,content:e.target.value}))}
+                    placeholder="Nhập nội dung text cho chương này..."
+                    style={{ minHeight: 140 }}
+                  />
+                </div>
                 <div style={{ display:'flex', gap:6, marginTop:'0.75rem' }}>
                   <button className="btn-primary" onClick={saveChap} disabled={saving} style={{ fontSize:'0.8rem', padding:'0.4rem 0.9rem' }}>
                     {saving ? '...' : editChap ? 'Cập nhật' : 'Thêm'}
@@ -285,24 +404,27 @@ export default function AdminComics() {
               {/* Chapter list */}
               <div className="admin-table-wrap" style={{ maxHeight:340, overflowY:'auto' }}>
                 <table className="admin-table">
-                  <thead><tr><th>Số</th><th>Tiêu đề</th><th>Lượt xem</th><th>Ngày thêm</th><th></th></tr></thead>
+                  <thead><tr><th>Số</th><th>Tiêu đề</th><th>Nội dung</th><th>Lượt xem</th><th>Ngày thêm</th><th></th></tr></thead>
                   <tbody>
                     {chapters.map(ch => (
                       <tr key={ch.id}>
                         <td style={{ color:'#a5b4fc', fontWeight:700 }}>Ch.{ch.number}</td>
                         <td>{ch.title}</td>
+                        <td style={{ color: ch.content ? '#34d399' : '#6b7280', fontSize:'0.78rem' }}>
+                          {ch.content ? `Có text (${ch.content.length} ký tự)` : 'Không có'}
+                        </td>
                         <td style={{ color:'#10b981' }}>{ch.views?.toLocaleString()}</td>
                         <td style={{ color:'#6b7280', fontSize:'0.75rem' }}>{new Date(ch.created_at).toLocaleDateString('vi-VN')}</td>
                         <td>
                           <div style={{ display:'flex', gap:4 }}>
-                            <button className="btn-sm btn-edit" onClick={() => { setEditChap(ch); setChapForm({ number: ch.number, title: ch.title }); }}><FiEdit2 /></button>
+                            <button className="btn-sm btn-edit" onClick={() => { setEditChap(ch); setChapForm({ number: ch.number, title: ch.title, content: ch.content || '' }); }}><FiEdit2 /></button>
                             <button className="btn-sm btn-delete" onClick={() => delChap(ch.id)}><FiTrash2 /></button>
                           </div>
                         </td>
                       </tr>
                     ))}
                     {chapters.length === 0 && (
-                      <tr><td colSpan={5} style={{ textAlign:'center', color:'#6b7280', padding:'1.5rem' }}>Chưa có chương nào</td></tr>
+                      <tr><td colSpan={6} style={{ textAlign:'center', color:'#6b7280', padding:'1.5rem' }}>Chưa có chương nào</td></tr>
                     )}
                   </tbody>
                 </table>
