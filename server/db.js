@@ -1,12 +1,54 @@
 import Database from 'better-sqlite3';
 import bcrypt from 'bcryptjs';
+import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const defaultDbPath = process.env.RENDER ? '/var/data/camap.db' : path.join(__dirname, 'camap.db');
-const DB_PATH = process.env.DB_PATH || defaultDbPath;
-const db = new Database(DB_PATH);
+const renderDbPath = '/var/data/camap.db';
+const localDbPath = path.join(__dirname, 'camap.db');
+const configuredDbPath = (process.env.DB_PATH || '').trim();
+const preferredDbPath = configuredDbPath || (process.env.RENDER ? renderDbPath : localDbPath);
+
+function ensureDbDirectoryExists(filePath) {
+  const dbDir = path.dirname(filePath);
+  if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+  }
+}
+
+function openDatabase() {
+  const candidates = [preferredDbPath];
+
+  if (process.env.RENDER) {
+    if (preferredDbPath !== renderDbPath) candidates.push(renderDbPath);
+    // Last-resort writable location to avoid startup crash when disk mount is missing.
+    candidates.push('/tmp/camap.db');
+  }
+
+  if (preferredDbPath !== localDbPath) {
+    candidates.push(localDbPath);
+  }
+
+  const uniqueCandidates = [...new Set(candidates)];
+  let lastError = null;
+
+  for (const dbPath of uniqueCandidates) {
+    try {
+      ensureDbDirectoryExists(dbPath);
+      const database = new Database(dbPath);
+      console.log(`[db] SQLite path: ${dbPath}`);
+      return database;
+    } catch (error) {
+      lastError = error;
+      console.error(`[db] Failed opening ${dbPath}: ${error.message}`);
+    }
+  }
+
+  throw lastError || new Error('Unable to open SQLite database.');
+}
+
+const db = openDatabase();
 
 // Pragma for performance
 db.pragma('journal_mode = WAL');
