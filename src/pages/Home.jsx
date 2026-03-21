@@ -39,6 +39,7 @@ export default function Home() {
     }, []);
 
     const activeComic = featured[activeIdx] || featured[0] || null;
+    const activeHomeCover = activeComic?.home_cover_url || activeComic?.cover_url || '';
     const sliderItemClass = 'w-[85%] shrink-0 sm:w-[47%] lg:w-[24%] xl:w-[calc((100%-80px)/5)]';
 
     // Định nghĩa mảng sai số để tạo sự khác biệt nhỏ về góc/vị trí giữa các thẻ ở vai trò Prev/Next
@@ -79,7 +80,7 @@ const CARD_DNA = [
                             <div
                                 className="absolute inset-0 bg-center bg-cover opacity-40 transition-all duration-700 pointer-events-none"
                                 style={{
-                                    backgroundImage: `url(${activeComic.cover_url})`,
+                                    backgroundImage: `url(${activeHomeCover})`,
                                     filter: 'blur(3rem)'
                                 }}
                             />
@@ -144,6 +145,7 @@ const CARD_DNA = [
                                             className="w-full"
                                         >
 {featured.map((comic) => {
+    const homeCover = comic.home_cover_url || comic.cover_url;
   // 1. BĂM ID ĐỂ LẤY DNA CỐ ĐỊNH CHO ẢNH
   const seedText = String(comic.id ?? '0');
   let hash = 0;
@@ -185,7 +187,7 @@ const CARD_DNA = [
                <div className="absolute inset-0" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
                   
                   <img
-                    src={comic.cover_url}
+                                        src={homeCover}
                     alt={comic.title}
                     className="w-full h-full object-cover"
                     style={{ 

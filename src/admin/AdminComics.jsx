@@ -10,7 +10,7 @@ import {
 } from '../api/admin.js';
 
 const EMPTY_COMIC = {
-  title:'', author:'', translator:'', description:'', cover_url:'', audio_url:'', status:'ongoing', genre_ids:[],
+  title:'', author:'', translator:'', description:'', cover_url:'', home_cover_url:'', audio_url:'', status:'ongoing', genre_ids:[],
   initial_chapters: []
 };
 const EMPTY_CHAP  = { number:'', title:'', content:'' };
@@ -68,7 +68,7 @@ export default function AdminComics() {
   const [cropAspect, setCropAspect] = useState(ASPECT_OPTIONS[0].id);
   const [cropLoading, setCropLoading] = useState(false);
   const [cropError, setCropError] = useState('');
-  const visibleCoverInputRef = useRef(null);
+  const homeCoverInputRef = useRef(null);
   const cropImageRef = useRef(null);
 
   const LIMIT = 15;
@@ -206,13 +206,13 @@ export default function AdminComics() {
     setCropModalOpen(true);
     setCropError('');
 
-    const currentCover = (form.cover_url || '').trim();
+    const currentCover = (form.home_cover_url || '').trim();
     if (!currentCover) {
       resetCropperState();
       return;
     }
 
-    await loadCropImage(currentCover, 'Ảnh bìa hiện tại');
+    await loadCropImage(currentCover, 'Ảnh ngang hiện tại');
   };
 
   const loadCropImage = useCallback(async (source, label) => {
@@ -239,7 +239,20 @@ export default function AdminComics() {
     }
   }, []);
 
-  const onPickCoverFile = async (event) => {
+  const onPickMainCoverFile = async (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      const source = String(reader.result || '');
+      if (!source) return;
+      setForm((f) => ({ ...f, cover_url: source }));
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
+  };
+
+  const onPickHomeCoverFile = async (event) => {
     const file = event.target.files?.[0];
     if (!file) return;
     setCropModalOpen(true);
@@ -249,17 +262,17 @@ export default function AdminComics() {
       const source = String(reader.result || '');
       if (!source) return;
       // Show selected image on form immediately, then allow optional crop refinement.
-      setForm((f) => ({ ...f, cover_url: source }));
+      setForm((f) => ({ ...f, home_cover_url: source }));
       await loadCropImage(source, file.name);
     };
     reader.readAsDataURL(file);
     event.target.value = '';
   };
 
-  const onLoadCoverFromUrl = async () => {
-    const url = (form.cover_url || '').trim();
+  const onLoadHomeCoverFromUrl = async () => {
+    const url = (form.home_cover_url || '').trim();
     if (!url) {
-      setCropError('Bạn chưa nhập URL ảnh bìa.');
+      setCropError('Bạn chưa nhập URL ảnh ngang.');
       return;
     }
     await loadCropImage(url, 'Ảnh từ URL');
@@ -304,7 +317,7 @@ export default function AdminComics() {
       );
 
       const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.86);
-      setForm((f) => ({ ...f, cover_url: croppedDataUrl }));
+      setForm((f) => ({ ...f, home_cover_url: croppedDataUrl }));
       setCropModalOpen(false);
       resetCropperState();
     } catch {
@@ -449,24 +462,46 @@ export default function AdminComics() {
                 <input className="form-input" value={form.author || ''} onChange={e => setForm(f => ({...f,author:e.target.value}))} placeholder="Tên tác giả (có thể để trống)"/>
               </div>
               <div className="form-group">
-                <label className="form-label">URL ảnh bìa</label>
+                <label className="form-label">Ảnh chính trang detail (dọc)</label>
                 <input className="form-input" value={form.cover_url} onChange={e => setForm(f => ({...f,cover_url:e.target.value}))} placeholder="https://..."/>
                 <div className="cover-upload-row">
-                  <label className="cover-upload-btn" htmlFor="cover-upload-input">
+                  <label className="cover-upload-btn" htmlFor="detail-cover-upload-input">
                     Upload ảnh từ máy
                   </label>
                   <input
-                    ref={visibleCoverInputRef}
-                    id="cover-upload-input"
+                    id="detail-cover-upload-input"
                     type="file"
                     accept="image/*"
-                    onChange={onPickCoverFile}
+                    onChange={onPickMainCoverFile}
                   />
                 </div>
                 {!!form.cover_url && (
                   <div className="cover-form-preview">
                     <img src={form.cover_url} alt="Preview ảnh bìa" className="cover-form-preview-img" />
-                    <span className="cover-tools-help">Preview ảnh bìa hiện tại trong form.</span>
+                    <span className="cover-tools-help">Ảnh này dùng cho trang chi tiết truyện.</span>
+                  </div>
+                )}
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Ảnh ngang cho Home/Slider</label>
+                <input className="form-input" value={form.home_cover_url || ''} onChange={e => setForm(f => ({...f,home_cover_url:e.target.value}))} placeholder="https://..."/>
+                <div className="cover-upload-row">
+                  <label className="cover-upload-btn" htmlFor="home-cover-upload-input">
+                    Upload ảnh ngang từ máy
+                  </label>
+                  <input
+                    ref={homeCoverInputRef}
+                    id="home-cover-upload-input"
+                    type="file"
+                    accept="image/*"
+                    onChange={onPickHomeCoverFile}
+                  />
+                </div>
+                {!!(form.home_cover_url || '').trim() && (
+                  <div className="cover-form-preview">
+                    <img src={form.home_cover_url} alt="Preview ảnh ngang" className="cover-form-preview-img" />
+                    <span className="cover-tools-help">Ảnh này dùng cho card ngang và slider ở trang Home.</span>
                   </div>
                 )}
                 <div className="cover-tools">
@@ -482,13 +517,13 @@ export default function AdminComics() {
                     className="btn-sm btn-edit"
                     onClick={() => {
                       openCropper();
-                      onLoadCoverFromUrl();
+                      onLoadHomeCoverFromUrl();
                     }}
                     disabled={cropLoading}
                   >
                     Lấy vùng từ URL hiện tại
                   </button>
-                  <span className="cover-tools-help">Ảnh sẽ cắt theo khung bìa dọc 2:3.</span>
+                  <span className="cover-tools-help">Ảnh ngang này sẽ dùng cho các thẻ Home cần tỉ lệ ngang (slider/card).</span>
                 </div>
               </div>
               <div className="form-group">
@@ -600,7 +635,7 @@ export default function AdminComics() {
         <div className="modal-overlay" style={{ zIndex: 1200 }} onClick={e => e.target === e.currentTarget && setCropModalOpen(false)}>
           <div className="modal-box cover-crop-modal">
             <div className="modal-header">
-              <h3>🖼️ Lấy vùng ảnh bìa</h3>
+              <h3>🖼️ Cắt ảnh ngang cho Home</h3>
               <button className="modal-close" onClick={() => setCropModalOpen(false)}><FiX /></button>
             </div>
             <div className="modal-body">
@@ -634,7 +669,7 @@ export default function AdminComics() {
                 <div className="cover-crop-controls">
                   <div className="cover-crop-source">Nguồn: {cropImageLabel || 'Chưa chọn ảnh'}</div>
 
-                  <button type="button" className="btn-sm btn-view" onClick={() => visibleCoverInputRef.current?.click()}>
+                  <button type="button" className="btn-sm btn-view" onClick={() => homeCoverInputRef.current?.click()}>
                     Chọn ảnh khác từ máy
                   </button>
 

@@ -73,6 +73,7 @@ db.exec(`
     translator  TEXT,
     description TEXT,
     cover_url   TEXT,
+    home_cover_url TEXT,
     audio_url   TEXT,
     status      TEXT DEFAULT 'ongoing',
     views       INTEGER DEFAULT 0,
@@ -153,6 +154,10 @@ if (!comicCols.some((c) => c.name === 'audio_url')) {
 if (!comicCols.some((c) => c.name === 'translator')) {
   db.exec('ALTER TABLE comics ADD COLUMN translator TEXT');
 }
+if (!comicCols.some((c) => c.name === 'home_cover_url')) {
+  db.exec('ALTER TABLE comics ADD COLUMN home_cover_url TEXT');
+  db.exec("UPDATE comics SET home_cover_url = cover_url WHERE IFNULL(home_cover_url, '') = ''");
+}
 
 const chapterCols = db.prepare("PRAGMA table_info('chapters')").all();
 if (!chapterCols.some((c) => c.name === 'content')) {
@@ -175,23 +180,23 @@ if (!alreadySeeded) {
 
   // Comics with placeholder covers using picsum (varied IDs)
   const comicsData = [
-    { title: 'Chim Hoàng Yến Bị Ép "Lên Chính Thất"', author: 'Diệp Thư', description: 'Nữ chính xuyên không vào tiểu thuyết, trở thành người vợ nhỏ bé trong lồng kính của nam chính phản diện...', cover_url: 'https://picsum.photos/seed/comic1/400/600', status: 'ongoing', views: 210500, genres: [1,2,3] },
-    { title: 'Dấu Hôn Của Thiên Sứ', author: 'Vân Lộc', description: 'Một cô gái bình thường bỗng dưng được thiên sứ đến hỏi thăm trong những giấc mơ, rồi cuộc sống của cô thay đổi hoàn toàn...', cover_url: 'https://picsum.photos/seed/comic2/400/600', status: 'ongoing', views: 185000, genres: [1,7] },
-    { title: 'Thật Ra Phản Diện Siêu Ngoan', author: 'Mộc Tươi', description: 'Một phản diện bỗng nhiên trở nên ngoan ngoãn khiến mọi người xung quanh không hiểu chuyện gì đang xảy ra...', cover_url: 'https://picsum.photos/seed/comic3/400/600', status: 'completed', views: 320000, genres: [2,4,6] },
-    { title: 'Đào Sắc Cát Cánh', author: 'Phong Lan', description: 'Hành trình của một nữ kiếm khách trẻ tuổi từ vô danh trở thành huyền thoại trong giang hồ...', cover_url: 'https://picsum.photos/seed/comic4/400/600', status: 'ongoing', views: 97000, genres: [4,5,6] },
-    { title: 'Anh Ấy Nói Yêu Sâu Đậm', author: 'Trà Mạc', description: 'Mối tình học trò đầy ngọt ngào nhưng ẩn chứa những bí mật không ngờ...', cover_url: 'https://picsum.photos/seed/comic5/400/600', status: 'ongoing', views: 145000, genres: [1,7,8] },
-    { title: 'Báo Phục', author: 'Hải Đường', description: 'Câu chuyện về một cô gái quyết tâm trả thù những kẻ đã hủy hoại gia đình mình...', cover_url: 'https://picsum.photos/seed/comic6/400/600', status: 'ongoing', views: 260000, genres: [4,8,3] },
-    { title: 'Khuyết Điểm', author: 'Lam Ngọc', description: 'Cuộc sống của hai người hoàn toàn khác biệt bỗng giao thoa tạo nên những khoảnh khắc đáng nhớ...', cover_url: 'https://picsum.photos/seed/comic7/400/600', status: 'completed', views: 178000, genres: [1,8] },
-    { title: 'Bất Giác Rung Động', author: 'Sương Mai', description: 'Học trường danh tiếng, gặp người đặc biệt, và những rung động đầu tiên không thể nào quên...', cover_url: 'https://picsum.photos/seed/comic8/400/600', status: 'ongoing', views: 420000, genres: [1,2,7] },
-    { title: 'Nghịch Ánh Sáng Mà Lớn Lên', author: 'Bạch Lộc', description: 'Câu chuyện trưởng thành đầy cảm xúc về một cậu bé lớn lên dưới bóng tối của xã hội nhưng không bao giờ đánh mất ánh sáng nội tâm...', cover_url: 'https://picsum.photos/seed/comic9/400/600', status: 'ongoing', views: 88000, genres: [8,7,2] },
-    { title: 'Thời Gian Quay Lại Gặp Anh', author: 'Nắng Chiều', description: 'Nếu có thể quay ngược thời gian, bạn sẽ chọn con đường nào khác không?', cover_url: 'https://picsum.photos/seed/comic10/400/600', status: 'completed', views: 510000, genres: [1,3,8] },
-    { title: 'Hắc Long Truyền Thuyết', author: 'Thiết Ngẫu', description: 'Truyền thuyết về con rồng đen huyền thoại và chàng thanh niên trẻ mang sứ mệnh triệu hồi nó...', cover_url: 'https://picsum.photos/seed/comic11/400/600', status: 'ongoing', views: 392000, genres: [4,5,6] },
-    { title: 'Nàng Tiên Cá Quay Đầu', author: 'Ngọc Trinh', description: 'Nàng tiên cá quyết định rời biển để theo đuổi giấc mơ trên mặt đất, nhưng mọi thứ không đơn giản như cô tưởng...', cover_url: 'https://picsum.photos/seed/comic12/400/600', status: 'ongoing', views: 123000, genres: [1,5,6] },
+    { title: 'Chim Hoàng Yến Bị Ép "Lên Chính Thất"', author: 'Diệp Thư', description: 'Nữ chính xuyên không vào tiểu thuyết, trở thành người vợ nhỏ bé trong lồng kính của nam chính phản diện...', cover_url: 'https://picsum.photos/seed/comic1/400/600', home_cover_url: 'https://picsum.photos/seed/comic1h/960/540', status: 'ongoing', views: 210500, genres: [1,2,3] },
+    { title: 'Dấu Hôn Của Thiên Sứ', author: 'Vân Lộc', description: 'Một cô gái bình thường bỗng dưng được thiên sứ đến hỏi thăm trong những giấc mơ, rồi cuộc sống của cô thay đổi hoàn toàn...', cover_url: 'https://picsum.photos/seed/comic2/400/600', home_cover_url: 'https://picsum.photos/seed/comic2h/960/540', status: 'ongoing', views: 185000, genres: [1,7] },
+    { title: 'Thật Ra Phản Diện Siêu Ngoan', author: 'Mộc Tươi', description: 'Một phản diện bỗng nhiên trở nên ngoan ngoãn khiến mọi người xung quanh không hiểu chuyện gì đang xảy ra...', cover_url: 'https://picsum.photos/seed/comic3/400/600', home_cover_url: 'https://picsum.photos/seed/comic3h/960/540', status: 'completed', views: 320000, genres: [2,4,6] },
+    { title: 'Đào Sắc Cát Cánh', author: 'Phong Lan', description: 'Hành trình của một nữ kiếm khách trẻ tuổi từ vô danh trở thành huyền thoại trong giang hồ...', cover_url: 'https://picsum.photos/seed/comic4/400/600', home_cover_url: 'https://picsum.photos/seed/comic4h/960/540', status: 'ongoing', views: 97000, genres: [4,5,6] },
+    { title: 'Anh Ấy Nói Yêu Sâu Đậm', author: 'Trà Mạc', description: 'Mối tình học trò đầy ngọt ngào nhưng ẩn chứa những bí mật không ngờ...', cover_url: 'https://picsum.photos/seed/comic5/400/600', home_cover_url: 'https://picsum.photos/seed/comic5h/960/540', status: 'ongoing', views: 145000, genres: [1,7,8] },
+    { title: 'Báo Phục', author: 'Hải Đường', description: 'Câu chuyện về một cô gái quyết tâm trả thù những kẻ đã hủy hoại gia đình mình...', cover_url: 'https://picsum.photos/seed/comic6/400/600', home_cover_url: 'https://picsum.photos/seed/comic6h/960/540', status: 'ongoing', views: 260000, genres: [4,8,3] },
+    { title: 'Khuyết Điểm', author: 'Lam Ngọc', description: 'Cuộc sống của hai người hoàn toàn khác biệt bỗng giao thoa tạo nên những khoảnh khắc đáng nhớ...', cover_url: 'https://picsum.photos/seed/comic7/400/600', home_cover_url: 'https://picsum.photos/seed/comic7h/960/540', status: 'completed', views: 178000, genres: [1,8] },
+    { title: 'Bất Giác Rung Động', author: 'Sương Mai', description: 'Học trường danh tiếng, gặp người đặc biệt, và những rung động đầu tiên không thể nào quên...', cover_url: 'https://picsum.photos/seed/comic8/400/600', home_cover_url: 'https://picsum.photos/seed/comic8h/960/540', status: 'ongoing', views: 420000, genres: [1,2,7] },
+    { title: 'Nghịch Ánh Sáng Mà Lớn Lên', author: 'Bạch Lộc', description: 'Câu chuyện trưởng thành đầy cảm xúc về một cậu bé lớn lên dưới bóng tối của xã hội nhưng không bao giờ đánh mất ánh sáng nội tâm...', cover_url: 'https://picsum.photos/seed/comic9/400/600', home_cover_url: 'https://picsum.photos/seed/comic9h/960/540', status: 'ongoing', views: 88000, genres: [8,7,2] },
+    { title: 'Thời Gian Quay Lại Gặp Anh', author: 'Nắng Chiều', description: 'Nếu có thể quay ngược thời gian, bạn sẽ chọn con đường nào khác không?', cover_url: 'https://picsum.photos/seed/comic10/400/600', home_cover_url: 'https://picsum.photos/seed/comic10h/960/540', status: 'completed', views: 510000, genres: [1,3,8] },
+    { title: 'Hắc Long Truyền Thuyết', author: 'Thiết Ngẫu', description: 'Truyền thuyết về con rồng đen huyền thoại và chàng thanh niên trẻ mang sứ mệnh triệu hồi nó...', cover_url: 'https://picsum.photos/seed/comic11/400/600', home_cover_url: 'https://picsum.photos/seed/comic11h/960/540', status: 'ongoing', views: 392000, genres: [4,5,6] },
+    { title: 'Nàng Tiên Cá Quay Đầu', author: 'Ngọc Trinh', description: 'Nàng tiên cá quyết định rời biển để theo đuổi giấc mơ trên mặt đất, nhưng mọi thứ không đơn giản như cô tưởng...', cover_url: 'https://picsum.photos/seed/comic12/400/600', home_cover_url: 'https://picsum.photos/seed/comic12h/960/540', status: 'ongoing', views: 123000, genres: [1,5,6] },
   ];
 
   const insertComic = db.prepare(`
-    INSERT INTO comics (title, author, translator, description, cover_url, status, views)
-    VALUES (@title, @author, @translator, @description, @cover_url, @status, @views)
+    INSERT INTO comics (title, author, translator, description, cover_url, home_cover_url, status, views)
+    VALUES (@title, @author, @translator, @description, @cover_url, @home_cover_url, @status, @views)
   `);
   const insertComicGenre = db.prepare('INSERT OR IGNORE INTO comic_genres VALUES (?, ?)');
   const insertChapter = db.prepare(`

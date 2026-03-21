@@ -95,6 +95,7 @@ router.post('/comics', (req, res) => {
     translator,
     description,
     cover_url,
+    home_cover_url,
     audio_url,
     status,
     genre_ids = [],
@@ -103,8 +104,8 @@ router.post('/comics', (req, res) => {
   if (!title) return res.status(400).json({ error: 'title required' });
 
   const insertComic = db.prepare(`
-    INSERT INTO comics (title, author, translator, description, cover_url, audio_url, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+    INSERT INTO comics (title, author, translator, description, cover_url, home_cover_url, audio_url, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
   `);
   const insG = db.prepare('INSERT OR IGNORE INTO comic_genres VALUES (?, ?)');
   const insertChapter = db.prepare(
@@ -118,6 +119,7 @@ router.post('/comics', (req, res) => {
       translator || '',
       description || '',
       cover_url || '',
+      home_cover_url || '',
       audio_url || '',
       status || 'ongoing'
     );
@@ -143,11 +145,11 @@ router.post('/comics', (req, res) => {
 });
 
 router.put('/comics/:id', (req, res) => {
-  const { title, author, translator, description, cover_url, audio_url, status, genre_ids } = req.body;
+  const { title, author, translator, description, cover_url, home_cover_url, audio_url, status, genre_ids } = req.body;
   db.prepare(`
-    UPDATE comics SET title=?, author=?, translator=?, description=?, cover_url=?, audio_url=?, status=?
+    UPDATE comics SET title=?, author=?, translator=?, description=?, cover_url=?, home_cover_url=?, audio_url=?, status=?
     WHERE id=?
-  `).run(title, author || '', translator || '', description, cover_url, audio_url || '', status, req.params.id);
+  `).run(title, author || '', translator || '', description, cover_url, home_cover_url || '', audio_url || '', status, req.params.id);
 
   if (genre_ids !== undefined) {
     db.prepare('DELETE FROM comic_genres WHERE comic_id = ?').run(req.params.id);
@@ -169,7 +171,7 @@ router.delete('/comics/:id', (req, res) => {
 router.get('/sliders', (req, res) => {
   const sliders = db.prepare(`
     SELECT hs.id, hs.comic_id, hs.sort_order, hs.is_active, hs.created_at,
-           c.title, c.author, c.cover_url, c.status
+           c.title, c.author, c.cover_url, c.home_cover_url, c.status
     FROM home_sliders hs
     JOIN comics c ON c.id = hs.comic_id
     ORDER BY hs.sort_order ASC, hs.id ASC

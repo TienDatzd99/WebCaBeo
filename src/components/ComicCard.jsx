@@ -13,11 +13,12 @@ const getStatusMeta = (status) => STATUS_META[status] || STATUS_META.ongoing;
 export function CardSquare({ comic }) {
   const statusMeta = getStatusMeta(comic.status);
   const rating = Number(comic.rating ?? 0);
+  const homeImage = comic.home_cover_url || comic.cover_url;
 
   return (
     <Link to={`/comic/${comic.id}`} className="card-sq">
       <div className="card-sq-img">
-        <img src={comic.cover_url} alt={comic.title} loading="lazy" />
+        <img src={homeImage} alt={comic.title} loading="lazy" />
         <span className={`card-badge ${statusMeta.cls}`}>{statusMeta.label}</span>
       </div>
       <div className="card-sq-info">
