@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
-import { FiChevronLeft, FiChevronRight, FiList, FiHome } from 'react-icons/fi';
+import { FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { FiLoader } from 'react-icons/fi';
 import { getChapter, markChapterRead } from '../api/chapters.js';
 import { reportSecurityFlag } from '../api/auth.js';
@@ -13,7 +13,6 @@ const Reading = () => {
   const navigate = useNavigate();
   const [chapter, setChapter] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [showNav, setShowNav] = useState(true);
   const [blocked, setBlocked] = useState(false);
   const hasReportedRef = useRef(false);
 
@@ -29,18 +28,6 @@ const Reading = () => {
       .finally(() => setLoading(false));
     window.scrollTo(0, 0);
   }, [chapterId, user]);
-
-  useEffect(() => {
-    let last = window.scrollY;
-    const onScroll = () => {
-      const cur = window.scrollY;
-      if (Math.abs(cur - last) < 10) return;
-      setShowNav(cur < last || cur < 100);
-      last = cur;
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
 
   useEffect(() => {
     if (!blocked || hasReportedRef.current) return;
@@ -86,12 +73,6 @@ const Reading = () => {
       }
     };
 
-    const onVisibility = () => {
-      if (document.hidden) {
-        setShowNav(false);
-      }
-    };
-
     // Heuristic detection to deter opening DevTools.
     const intervalId = window.setInterval(() => {
       const widthGap = window.outerWidth - window.innerWidth;
@@ -108,7 +89,6 @@ const Reading = () => {
     document.addEventListener('dragstart', blockEvent);
     document.addEventListener('selectstart', blockEvent);
     window.addEventListener('keydown', onKeyDown);
-    document.addEventListener('visibilitychange', onVisibility);
 
     return () => {
       window.clearInterval(intervalId);
@@ -119,7 +99,6 @@ const Reading = () => {
       document.removeEventListener('dragstart', blockEvent);
       document.removeEventListener('selectstart', blockEvent);
       window.removeEventListener('keydown', onKeyDown);
-      document.removeEventListener('visibilitychange', onVisibility);
     };
   }, []);
 
@@ -141,9 +120,7 @@ const Reading = () => {
   );
 
   const textContent = (chapter.content || '').trim();
-  const textParagraphs = textContent
-    ? textContent.split(/\r?\n\s*\r?\n/).map((p) => p.trim()).filter(Boolean)
-    : [];
+  const hasText = Boolean(textContent);
 
   if (blocked) return (
     <div className="reading-page">
@@ -157,50 +134,38 @@ const Reading = () => {
 
   return (
     <div className="reading-page fade-in">
-      {/* Top nav */}
-      <div className={`reading-nav top-nav ${showNav ? 'visible' : 'hidden'}`}>
-        <div className="nav-row">
-          <Link to={`/comic/${id}`} className="nav-back-btn"><FiChevronLeft /> {chapter.comic_title}</Link>
-          <span className="nav-chap-title">
-            Chapter {chapter.number}{chapter.title ? ` - ${chapter.title}` : ''}
-          </span>
-          <div className="nav-icons">
-            <Link to="/" className="nav-icon-btn" title="Trang chủ"><FiHome /></Link>
-            <Link to={`/comic/${id}`} className="nav-icon-btn" title="Danh sách chương"><FiList /></Link>
-          </div>
-        </div>
-      </div>
+      <section className="novel-shell">
+        <h1 className="novel-title">Chương {chapter.number}</h1>
 
-      {/* Pages */}
-      <div className="reading-content" onClick={() => setShowNav(v => !v)}>
+        <div className="novel-toolbar">
+          <button
+            className="novel-nav-btn"
+            disabled={!chapter.prevChapter}
+            onClick={() => chapter.prevChapter && goTo(chapter.prevChapter.id)}
+          >
+            <FiChevronLeft /> Chương trước
+          </button>
+
+          <Link to={`/comic/${id}`} className="novel-back-link">Trở về tiểu thuyết</Link>
+
+          <button
+            className="novel-nav-btn"
+            disabled={!chapter.nextChapter}
+            onClick={() => chapter.nextChapter && goTo(chapter.nextChapter.id)}
+          >
+            Chương sau <FiChevronRight />
+          </button>
+        </div>
+
         <article className="chapter-text-wrap">
-          <h1 className="chapter-text-title">Chương {chapter.number}{chapter.title ? ` - ${chapter.title}` : ''}</h1>
-          {textParagraphs.length > 0 ? (
-            textParagraphs.map((paragraph, idx) => (
-              <p key={idx} className="chapter-text-paragraph">{paragraph}</p>
-            ))
+          <h2 className="chapter-subtitle">{chapter.title || `Chương ${chapter.number}`}</h2>
+          {hasText ? (
+            <pre className="chapter-text-block">{textContent}</pre>
           ) : (
             <p className="chapter-text-empty">Nội dung chương đang được cập nhật.</p>
           )}
         </article>
-      </div>
-
-      {/* Bottom nav */}
-      <div className={`reading-nav bottom-nav ${showNav ? 'visible' : 'hidden'}`}>
-        <div className="nav-row center">
-          <button
-            className="nav-chap-btn"
-            disabled={!chapter.prevChapter}
-            onClick={() => chapter.prevChapter && goTo(chapter.prevChapter.id)}
-          ><FiChevronLeft /> Chap trước</button>
-          <span className="nav-chap-label">Chapter {chapter.number}</span>
-          <button
-            className="nav-chap-btn"
-            disabled={!chapter.nextChapter}
-            onClick={() => chapter.nextChapter && goTo(chapter.nextChapter.id)}
-          >Chap sau <FiChevronRight /></button>
-        </div>
-      </div>
+      </section>
     </div>
   );
 };
