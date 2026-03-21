@@ -10,12 +10,16 @@
    - Build Command: `npm install`
    - Start Command: `npm run server`
    - Health Check Path: `/api/health`
-3. Add environment variables:
+3. Add a Persistent Disk in Render (important):
+   - Name: `sqlite-data` (any name)
+   - Mount Path: `/var/data`
+   - Size: 1 GB (or more)
+4. Add environment variables:
    - `PORT=3001`
    - `FRONTEND_URL=https://your-vercel-project.vercel.app`
    - `JWT_SECRET=<long-random-secret>`
-   - `DB_PATH=/opt/render/project/src/server/camap.db`
-4. Deploy and copy backend URL, for example:
+   - `DB_PATH=/var/data/camap.db`
+5. Deploy and copy backend URL, for example:
    - `https://your-render-service.onrender.com`
 
 ## 3) Deploy frontend on Vercel
@@ -41,5 +45,5 @@
 
 ## Notes
 - Free Render may sleep when idle, first request can be slow.
-- SQLite file on free hosting may be reset on some restarts/redeploys.
+- If SQLite is not on a Persistent Disk, data can be lost after redeploy/restart.
 - For persistent production data, migrate to managed Postgres (Neon/Supabase).
