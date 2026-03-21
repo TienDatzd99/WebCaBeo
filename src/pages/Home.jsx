@@ -10,6 +10,10 @@ import { getComics, getFeaturedComics } from '../api/comics.js';
 import { CardSquare, CardPortrait } from '../components/ComicCard';
 import 'swiper/css/effect-creative';
 
+const FEATURED_LIMIT = 5;
+const POPULAR_LIMIT = 5;
+const LATEST_LIMIT = 10;
+
 export default function Home() {
     const [featured, setFeatured] = useState([]);
     const [popular, setPopular] = useState([]);
@@ -21,12 +25,12 @@ export default function Home() {
         Promise.all([
             getFeaturedComics(),
             getComics({ limit: 10, sort: 'views' }),
-            getComics({ limit: 12 }),
+            getComics({ limit: 20 }),
         ])
             .then(([f, p, l]) => {
-                setFeatured(f.data.comics || f.data);
-                setPopular((p.data.comics || p.data).slice(0, 8));
-                setLatest(l.data.comics || l.data);
+                setFeatured((f.data.comics || f.data).slice(0, FEATURED_LIMIT));
+                setPopular((p.data.comics || p.data).slice(0, POPULAR_LIMIT));
+                setLatest((l.data.comics || l.data).slice(0, LATEST_LIMIT));
             })
             .catch(() => { })
             .finally(() => setLoading(false));
@@ -337,12 +341,12 @@ const CARD_DNA = [
                         </Link>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-5 md:grid-cols-4">
+                    <div className="grid grid-cols-2 gap-5 md:grid-cols-5">
                         {loading
-                            ? Array(8)
+                            ? Array(LATEST_LIMIT)
                                 .fill(0)
                                 .map((_, i) => <SkelCard key={i} />)
-                            : latest.slice(0, 8).map((c) => <CardPortrait key={c.id} comic={c} />)}
+                            : latest.map((c) => <CardPortrait key={c.id} comic={c} />)}
                     </div>
                 </section>
             </div>
