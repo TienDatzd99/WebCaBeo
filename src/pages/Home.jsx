@@ -10,8 +10,8 @@ import { getComics, getFeaturedComics } from '../api/comics.js';
 import { CardSquare, CardPortrait } from '../components/ComicCard';
 import 'swiper/css/effect-creative';
 
-const FEATURED_LIMIT = 5;
-const POPULAR_LIMIT = 5;
+const FEATURED_LIMIT = 10;
+const POPULAR_LIMIT = 10;
 const LATEST_LIMIT = 10;
 
 export default function Home() {
@@ -251,7 +251,7 @@ const CARD_DNA = [
 
                     <div className="relative">
                         <button
-                            className="absolute -left-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#111] shadow-md transition hover:bg-white"
+                            className="absolute left-2 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#111] shadow-md transition hover:bg-white"
                             onClick={() => document.getElementById('sl-feat')?.scrollBy({ left: -320, behavior: 'smooth' })}
                         >
                             <FiChevronLeft />
@@ -272,7 +272,7 @@ const CARD_DNA = [
                                 ))}
                         </div>
                         <button
-                            className="absolute -right-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#111] shadow-md transition hover:bg-white"
+                            className="absolute right-2 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#111] shadow-md transition hover:bg-white"
                             onClick={() => document.getElementById('sl-feat')?.scrollBy({ left: 320, behavior: 'smooth' })}
                         >
                             <FiChevronRight />
@@ -297,7 +297,7 @@ const CARD_DNA = [
 
                     <div className="relative">
                         <button
-                            className="absolute -left-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#111] shadow-md transition hover:bg-white"
+                            className="absolute left-2 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#111] shadow-md transition hover:bg-white"
                             onClick={() => document.getElementById('sl-pop')?.scrollBy({ left: -320, behavior: 'smooth' })}
                         >
                             <FiChevronLeft />
@@ -318,7 +318,7 @@ const CARD_DNA = [
                                 ))}
                         </div>
                         <button
-                            className="absolute -right-3 top-1/2 z-10 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#111] shadow-md transition hover:bg-white"
+                            className="absolute right-2 top-1/2 z-10 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-[#111] shadow-md transition hover:bg-white"
                             onClick={() => document.getElementById('sl-pop')?.scrollBy({ left: 320, behavior: 'smooth' })}
                         >
                             <FiChevronRight />
