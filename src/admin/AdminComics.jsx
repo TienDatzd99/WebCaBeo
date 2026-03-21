@@ -21,11 +21,10 @@ const STATUS_OPTIONS = [
   { value: 'hiatus', label: 'Tạm ngưng', badge: 'badge-hiatus' },
 ];
 const ASPECT_OPTIONS = [
-  { id: '2:3', label: '2:3 (dọc)', width: 2, height: 3 },
   { id: '16:9', label: '16:9', width: 16, height: 9 },
   { id: '16:10', label: '16:10', width: 16, height: 10 },
-  { id: '4:5', label: '4:5', width: 4, height: 5 },
-  { id: '1:1', label: '1:1', width: 1, height: 1 },
+  { id: '3:2', label: '3:2', width: 3, height: 2 },
+  { id: '21:9', label: '21:9', width: 21, height: 9 },
 ];
 
 const createCenteredCrop = (mediaWidth, mediaHeight, aspect) =>
@@ -206,7 +205,7 @@ export default function AdminComics() {
     setCropModalOpen(true);
     setCropError('');
 
-    const currentCover = (form.home_cover_url || '').trim();
+    const currentCover = (form.home_cover_url || form.cover_url || '').trim();
     if (!currentCover) {
       resetCropperState();
       return;
@@ -689,7 +688,7 @@ export default function AdminComics() {
                     </div>
                   </div>
 
-                  <div className="cover-crop-note">Kéo cả khung để di chuyển và kéo các góc để đổi vùng cắt.</div>
+                  <div className="cover-crop-note">Ảnh Home dùng tỉ lệ ngang. Kéo cả khung để di chuyển và kéo các góc để đổi vùng cắt.</div>
 
                   {cropLoading && <div className="cover-crop-note">Đang tải ảnh...</div>}
                   {cropError && <div className="cover-crop-error">{cropError}</div>}
