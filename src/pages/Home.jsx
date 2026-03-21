@@ -223,7 +223,7 @@ const CARD_DNA = [
 })}
                                         </Swiper>
 
-                                        <div className="custom-pagination mt-2  [&_.swiper-pagination-bullet-active]:bg-white/90 [&_.swiper-pagination-bullet]:mx-1 [&_.swiper-pagination-bullet]:h-3 [&_.swiper-pagination-bullet]:w-3 [&_.swiper-pagination-bullet]:bg-white/40 [&_.swiper-pagination-bullet]:rounded-full" />
+                                        <div className="custom-pagination mt-2 flex w-full items-center justify-center" />
                                     </div>
                                 )}
                             </div>

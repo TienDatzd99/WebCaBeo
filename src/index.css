@@ -67,3 +67,20 @@ input, select, textarea { font-family:inherit; }
   animation: shimmer 1.5s infinite;
   border-radius: var(--radius-sm);
 }
+
+/* Home hero pagination bullets */
+.custom-pagination .swiper-pagination-bullet {
+  width: 6px;
+  height: 6px;
+  margin: 0 5px !important;
+  border-radius: 9999px;
+  background: rgba(255,255,255,0.24) !important;
+  opacity: 1 !important;
+  transition: all 0.18s ease;
+}
+
+.custom-pagination .swiper-pagination-bullet.swiper-pagination-bullet-active {
+  background: #ffffff !important;
+  transform: scale(1.16);
+  box-shadow: 0 0 0 2px rgba(255,255,255,0.2);
+}
