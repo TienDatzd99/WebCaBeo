@@ -151,6 +151,9 @@ export default function AdminComics() {
       }
       setComicModal(null);
       load();
+    } catch (error) {
+      const message = error?.response?.data?.error || 'Không thể lưu truyện. Vui lòng thử lại.';
+      alert(message);
     } finally { setSaving(false); }
   };
 
@@ -276,8 +279,13 @@ export default function AdminComics() {
       const sourceWidth = Math.max(1, Math.floor(completedCrop.width * scaleX));
       const sourceHeight = Math.max(1, Math.floor(completedCrop.height * scaleY));
 
-      canvas.width = sourceWidth;
-      canvas.height = sourceHeight;
+      const MAX_OUTPUT_SIDE = 1600;
+      const scale = Math.min(1, MAX_OUTPUT_SIDE / Math.max(sourceWidth, sourceHeight));
+      const outputWidth = Math.max(1, Math.round(sourceWidth * scale));
+      const outputHeight = Math.max(1, Math.round(sourceHeight * scale));
+
+      canvas.width = outputWidth;
+      canvas.height = outputHeight;
 
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
@@ -291,11 +299,11 @@ export default function AdminComics() {
         sourceHeight,
         0,
         0,
-        sourceWidth,
-        sourceHeight
+        outputWidth,
+        outputHeight
       );
 
-      const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.92);
+      const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.86);
       setForm((f) => ({ ...f, cover_url: croppedDataUrl }));
       setCropModalOpen(false);
       resetCropperState();
