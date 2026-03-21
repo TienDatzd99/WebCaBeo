@@ -65,15 +65,15 @@ router.get('/comics', (req, res) => {
     LEFT JOIN chapters ch ON ch.comic_id = c.id
     LEFT JOIN comic_genres cg ON cg.comic_id = c.id
     LEFT JOIN genres g ON g.id = cg.genre_id
-    WHERE c.title LIKE ? OR c.author LIKE ?
+    WHERE c.title LIKE ? OR c.author LIKE ? OR IFNULL(c.translator, '') LIKE ?
     GROUP BY c.id
     ORDER BY c.created_at DESC
     LIMIT ? OFFSET ?
-  `).all(q, q, Number(limit), Number(offset));
+  `).all(q, q, q, Number(limit), Number(offset));
 
   const total = db.prepare(
-    'SELECT COUNT(*) as cnt FROM comics WHERE title LIKE ? OR author LIKE ?'
-  ).get(q, q).cnt;
+    "SELECT COUNT(*) as cnt FROM comics WHERE title LIKE ? OR author LIKE ? OR IFNULL(translator, '') LIKE ?"
+  ).get(q, q, q).cnt;
 
   res.json({ comics, total, page: Number(page), limit: Number(limit) });
 });
@@ -92,6 +92,7 @@ router.post('/comics', (req, res) => {
   const {
     title,
     author,
+    translator,
     description,
     cover_url,
     audio_url,
@@ -99,11 +100,11 @@ router.post('/comics', (req, res) => {
     genre_ids = [],
     chapters = []
   } = req.body;
-  if (!title || !author) return res.status(400).json({ error: 'title and author required' });
+  if (!title) return res.status(400).json({ error: 'title required' });
 
   const insertComic = db.prepare(`
-    INSERT INTO comics (title, author, description, cover_url, audio_url, status)
-    VALUES (?, ?, ?, ?, ?, ?)
+    INSERT INTO comics (title, author, translator, description, cover_url, audio_url, status)
+    VALUES (?, ?, ?, ?, ?, ?, ?)
   `);
   const insG = db.prepare('INSERT OR IGNORE INTO comic_genres VALUES (?, ?)');
   const insertChapter = db.prepare(
@@ -113,7 +114,8 @@ router.post('/comics', (req, res) => {
   const tx = db.transaction(() => {
     const info = insertComic.run(
       title,
-      author,
+      author || '',
+      translator || '',
       description || '',
       cover_url || '',
       audio_url || '',
@@ -141,11 +143,11 @@ router.post('/comics', (req, res) => {
 });
 
 router.put('/comics/:id', (req, res) => {
-  const { title, author, description, cover_url, audio_url, status, genre_ids } = req.body;
+  const { title, author, translator, description, cover_url, audio_url, status, genre_ids } = req.body;
   db.prepare(`
-    UPDATE comics SET title=?, author=?, description=?, cover_url=?, audio_url=?, status=?
+    UPDATE comics SET title=?, author=?, translator=?, description=?, cover_url=?, audio_url=?, status=?
     WHERE id=?
-  `).run(title, author, description, cover_url, audio_url || '', status, req.params.id);
+  `).run(title, author || '', translator || '', description, cover_url, audio_url || '', status, req.params.id);
 
   if (genre_ids !== undefined) {
     db.prepare('DELETE FROM comic_genres WHERE comic_id = ?').run(req.params.id);

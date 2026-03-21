@@ -210,7 +210,7 @@ const CARD_DNA = [
                   </h2>
                   <div className="flex justify-end mt-3">
                     <span className="bg-white text-black text-[10px] font-bold px-2 py-1 rounded shadow-sm">
-                      DỊCH GIẢ: {comic.author}
+                                            DỊCH GIẢ: {comic.translator || comic.author || 'Đang cập nhật'}
                     </span>
                   </div>
                </div>

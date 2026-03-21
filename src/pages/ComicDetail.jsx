@@ -80,6 +80,8 @@ export default function ComicDetail() {
       ? comic.audio_url
       : `https://${comic.audio_url}`)
     : DEFAULT_AUDIO_URL;
+  const translatorName = comic.translator || comic.author || '';
+  const authorName = (comic.author || '').trim();
 
   /* fake reviews for demo */
   const reviews = [
@@ -108,12 +110,14 @@ export default function ComicDetail() {
             <div className="cd-fields">
               <div className="cd-row">
                 <FiUser className="cd-ri violet" />
-                <span>Người dịch: <span className="clr-purple font-bold">{comic.author}</span></span>
+                <span>Người dịch: <span className="clr-purple font-bold">{translatorName || 'Đang cập nhật'}</span></span>
               </div>
-              <div className="cd-row">
-                <FiUser className="cd-ri cyan" />
-                <span>Tác giả: <span className="clr-cyan font-bold">{comic.author}</span></span>
-              </div>
+              {authorName && (
+                <div className="cd-row">
+                  <FiUser className="cd-ri cyan" />
+                  <span>Tác giả: <span className="clr-cyan font-bold">{authorName}</span></span>
+                </div>
+              )}
               <div className="cd-row">
                 <FiCheckCircle className="cd-ri green" />
                 <span>Trạng thái: <span className={`cd-badge ${st.cls}`}>{st.label}</span></span>

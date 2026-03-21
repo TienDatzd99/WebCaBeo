@@ -42,7 +42,10 @@ router.get('/', optionalAuth, (req, res) => {
   }
   const conditions = [];
   if (genre)  { conditions.push('g.name = ?'); params.push(genre); }
-  if (search) { conditions.push('c.title LIKE ?'); params.push(`%${search}%`); }
+  if (search) {
+    conditions.push("(c.title LIKE ? OR c.author LIKE ? OR IFNULL(c.translator, '') LIKE ?)");
+    params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+  }
   if (status) { conditions.push('c.status = ?'); params.push(status); }
   if (conditions.length) query += ` WHERE ${conditions.join(' AND ')}`;
 

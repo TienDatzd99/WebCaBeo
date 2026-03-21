@@ -8,7 +8,7 @@ import {
 } from '../api/admin.js';
 
 const EMPTY_COMIC = {
-  title:'', author:'', description:'', cover_url:'', audio_url:'', status:'ongoing', genre_ids:[],
+  title:'', author:'', translator:'', description:'', cover_url:'', audio_url:'', status:'ongoing', genre_ids:[],
   initial_chapters: []
 };
 const EMPTY_CHAP  = { number:'', title:'', content:'' };
@@ -244,9 +244,13 @@ export default function AdminComics() {
                   <input className="form-input" value={form.title} onChange={e => setForm(f => ({...f,title:e.target.value}))} placeholder="Tên truyện"/>
                 </div>
                 <div className="form-group">
-                  <label className="form-label">Tác giả *</label>
-                  <input className="form-input" value={form.author} onChange={e => setForm(f => ({...f,author:e.target.value}))} placeholder="Tên tác giả"/>
+                  <label className="form-label">Dịch giả</label>
+                  <input className="form-input" value={form.translator || ''} onChange={e => setForm(f => ({...f,translator:e.target.value}))} placeholder="Tên dịch giả"/>
                 </div>
+              </div>
+              <div className="form-group">
+                <label className="form-label">Tác giả (tuỳ chọn)</label>
+                <input className="form-input" value={form.author || ''} onChange={e => setForm(f => ({...f,author:e.target.value}))} placeholder="Tên tác giả (có thể để trống)"/>
               </div>
               <div className="form-group">
                 <label className="form-label">URL ảnh bìa</label>

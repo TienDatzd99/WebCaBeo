@@ -28,6 +28,7 @@ db.exec(`
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     title       TEXT NOT NULL,
     author      TEXT NOT NULL,
+    translator  TEXT,
     description TEXT,
     cover_url   TEXT,
     audio_url   TEXT,
@@ -107,6 +108,9 @@ const comicCols = db.prepare("PRAGMA table_info('comics')").all();
 if (!comicCols.some((c) => c.name === 'audio_url')) {
   db.exec('ALTER TABLE comics ADD COLUMN audio_url TEXT');
 }
+if (!comicCols.some((c) => c.name === 'translator')) {
+  db.exec('ALTER TABLE comics ADD COLUMN translator TEXT');
+}
 
 const chapterCols = db.prepare("PRAGMA table_info('chapters')").all();
 if (!chapterCols.some((c) => c.name === 'content')) {
@@ -144,8 +148,8 @@ if (!alreadySeeded) {
   ];
 
   const insertComic = db.prepare(`
-    INSERT INTO comics (title, author, description, cover_url, status, views)
-    VALUES (@title, @author, @description, @cover_url, @status, @views)
+    INSERT INTO comics (title, author, translator, description, cover_url, status, views)
+    VALUES (@title, @author, @translator, @description, @cover_url, @status, @views)
   `);
   const insertComicGenre = db.prepare('INSERT OR IGNORE INTO comic_genres VALUES (?, ?)');
   const insertChapter = db.prepare(`
@@ -157,7 +161,7 @@ if (!alreadySeeded) {
   const seedAll = db.transaction(() => {
     comicsData.forEach(comic => {
       const { genres: comicGenres, ...rest } = comic;
-      const result = insertComic.run(rest);
+      const result = insertComic.run({ ...rest, translator: rest.author || '' });
       const comicId = result.lastInsertRowid;
 
       comicGenres.forEach(gId => insertComicGenre.run(comicId, gId));
