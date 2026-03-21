@@ -3,6 +3,14 @@ import { Link } from 'react-router-dom';
 import { FiBook, FiUsers, FiEye, FiStar, FiHeart, FiTrendingUp, FiList } from 'react-icons/fi';
 import { getAdminStats } from '../api/admin.js';
 
+const STATUS_META = {
+  ongoing: { label: 'Đang ra', badge: 'badge-ongoing' },
+  completed: { label: 'Hoàn thành', badge: 'badge-completed' },
+  hiatus: { label: 'Tạm ngưng', badge: 'badge-hiatus' },
+};
+
+const getStatusMeta = (status) => STATUS_META[status] || STATUS_META.ongoing;
+
 export default function AdminDashboard() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -115,8 +123,8 @@ export default function AdminDashboard() {
                   </td>
                   <td style={{ color:'#9ca3af' }}>{c.author}</td>
                   <td>
-                    <span className={`status-badge ${c.status === 'completed' ? 'badge-completed' : 'badge-ongoing'}`}>
-                      {c.status === 'completed' ? 'Hoàn thành' : 'Đang ra'}
+                    <span className={`status-badge ${getStatusMeta(c.status).badge}`}>
+                      {getStatusMeta(c.status).label}
                     </span>
                   </td>
                   <td style={{ color:'#10b981' }}>{fmtNum(c.views)}</td>

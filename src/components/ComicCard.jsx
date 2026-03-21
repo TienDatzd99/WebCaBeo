@@ -3,14 +3,13 @@ import './ComicCard.css';
 
 /* Horizontal/Square card — used in "Truyện đề cử" and "Đề cử" sliders */
 export function CardSquare({ comic }) {
-  const statusLabel = comic.status === 'completed' ? 'Hoàn thành' : 'Đang ra';
-  const statusCls   = comic.status === 'completed' ? 'badge-done' : 'badge-ongoing';
+  const statusMeta = getStatusMeta(comic.status);
 
   return (
     <Link to={`/comic/${comic.id}`} className="card-sq">
       <div className="card-sq-img">
         <img src={comic.cover_url} alt={comic.title} loading="lazy" />
-        <span className={`card-badge ${statusCls}`}>{statusLabel}</span>
+        <span className={`card-badge ${statusMeta.cls}`}>{statusMeta.label}</span>
       </div>
       <div className="card-sq-info">
         <p className="card-sq-title">{comic.title}</p>
@@ -25,14 +24,13 @@ export function CardSquare({ comic }) {
 
 /* Portrait card — used in "Truyện mới nhất" grid */
 export function CardPortrait({ comic }) {
-  const statusLabel = comic.status === 'completed' ? 'Hoàn thành' : 'Đang ra';
-  const statusCls   = comic.status === 'completed' ? 'badge-done' : 'badge-ongoing';
+  const statusMeta = getStatusMeta(comic.status);
 
   return (
     <Link to={`/comic/${comic.id}`} className="card-pt">
       <div className="card-pt-img">
         <img src={comic.cover_url} alt={comic.title} loading="lazy" />
-        <span className={`card-badge ${statusCls}`}>{statusLabel}</span>
+        <span className={`card-badge ${statusMeta.cls}`}>{statusMeta.label}</span>
         {comic.isNew && <span className="card-badge badge-new" style={{ top: '6px', right: comic.status ? '68px' : '6px' }}>Mới</span>}
       </div>
       <div className="card-pt-info">

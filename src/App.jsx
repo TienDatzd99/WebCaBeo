@@ -13,6 +13,7 @@ import Search from './pages/Search.jsx';
 import AdminLayout    from './admin/AdminLayout.jsx';
 import AdminDashboard from './admin/AdminDashboard.jsx';
 import AdminComics    from './admin/AdminComics.jsx';
+import AdminSliders   from './admin/AdminSliders.jsx';
 import AdminUsers     from './admin/AdminUsers.jsx';
 import AdminGenres    from './admin/AdminGenres.jsx';
 
@@ -24,6 +25,7 @@ function App() {
         <Route path="/admin" element={<AdminLayout />}>
           <Route index          element={<AdminDashboard />} />
           <Route path="comics"  element={<AdminComics />} />
+          <Route path="sliders" element={<AdminSliders />} />
           <Route path="users"   element={<AdminUsers />} />
           <Route path="genres"  element={<AdminGenres />} />
         </Route>

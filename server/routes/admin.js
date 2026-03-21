@@ -130,6 +130,56 @@ router.delete('/comics/:id', (req, res) => {
 });
 
 /* ══════════════════════════════════════════════════
+   HOMEPAGE SLIDER MANAGEMENT
+══════════════════════════════════════════════════ */
+router.get('/sliders', (req, res) => {
+  const sliders = db.prepare(`
+    SELECT hs.id, hs.comic_id, hs.sort_order, hs.is_active, hs.created_at,
+           c.title, c.author, c.cover_url, c.status
+    FROM home_sliders hs
+    JOIN comics c ON c.id = hs.comic_id
+    ORDER BY hs.sort_order ASC, hs.id ASC
+  `).all();
+  res.json(sliders);
+});
+
+router.post('/sliders', (req, res) => {
+  const { comic_id, sort_order = 0, is_active = 1 } = req.body;
+  if (!comic_id) return res.status(400).json({ error: 'comic_id required' });
+
+  const comic = db.prepare('SELECT id FROM comics WHERE id = ?').get(comic_id);
+  if (!comic) return res.status(404).json({ error: 'Comic not found' });
+
+  try {
+    const info = db.prepare(`
+      INSERT INTO home_sliders (comic_id, sort_order, is_active)
+      VALUES (?, ?, ?)
+    `).run(comic_id, Number(sort_order) || 0, is_active ? 1 : 0);
+
+    res.json({ id: info.lastInsertRowid, message: 'Slider item created' });
+  } catch {
+    res.status(409).json({ error: 'Truyện này đã có trong slider' });
+  }
+});
+
+router.put('/sliders/:id', (req, res) => {
+  const current = db.prepare('SELECT * FROM home_sliders WHERE id = ?').get(req.params.id);
+  if (!current) return res.status(404).json({ error: 'Not found' });
+
+  const nextSort = req.body.sort_order !== undefined ? Number(req.body.sort_order) || 0 : current.sort_order;
+  const nextActive = req.body.is_active !== undefined ? (req.body.is_active ? 1 : 0) : current.is_active;
+
+  db.prepare('UPDATE home_sliders SET sort_order = ?, is_active = ? WHERE id = ?')
+    .run(nextSort, nextActive, req.params.id);
+  res.json({ message: 'Updated' });
+});
+
+router.delete('/sliders/:id', (req, res) => {
+  db.prepare('DELETE FROM home_sliders WHERE id = ?').run(req.params.id);
+  res.json({ message: 'Deleted' });
+});
+
+/* ══════════════════════════════════════════════════
    CHAPTER MANAGEMENT
 ══════════════════════════════════════════════════ */
 router.get('/comics/:comicId/chapters', (req, res) => {

@@ -57,6 +57,25 @@ router.get('/', optionalAuth, (req, res) => {
   res.json({ comics: comics.map(enrichComic), total });
 });
 
+// GET /api/comics/featured
+router.get('/featured', (req, res) => {
+  const rows = db.prepare(`
+    SELECT c.*
+    FROM home_sliders hs
+    JOIN comics c ON c.id = hs.comic_id
+    WHERE hs.is_active = 1
+    ORDER BY hs.sort_order ASC, hs.id ASC
+    LIMIT 10
+  `).all();
+
+  if (!rows.length) {
+    const fallback = db.prepare('SELECT * FROM comics ORDER BY views DESC, created_at DESC LIMIT 10').all();
+    return res.json({ comics: fallback.map(enrichComic) });
+  }
+
+  res.json({ comics: rows.map(enrichComic) });
+});
+
 // GET /api/comics/:id
 router.get('/:id', optionalAuth, (req, res) => {
   const comic = db.prepare('SELECT * FROM comics WHERE id = ?').get(req.params.id);

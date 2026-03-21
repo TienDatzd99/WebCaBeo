@@ -14,6 +14,12 @@ export const createComic     = (data)   => api.post('/admin/comics', data, auth(
 export const updateComic     = (id, d)  => api.put(`/admin/comics/${id}`, d, auth());
 export const deleteComic     = (id)     => api.delete(`/admin/comics/${id}`, auth());
 
+/* Homepage sliders */
+export const getAdminSliders = ()       => api.get('/admin/sliders', auth());
+export const createSlider    = (data)   => api.post('/admin/sliders', data, auth());
+export const updateSlider    = (id, d)  => api.put(`/admin/sliders/${id}`, d, auth());
+export const deleteSlider    = (id)     => api.delete(`/admin/sliders/${id}`, auth());
+
 /* Chapters */
 export const getAdminChapters  = (cid)     => api.get(`/admin/comics/${cid}/chapters`, auth());
 export const createChapter     = (cid, d)  => api.post(`/admin/comics/${cid}/chapters`, d, auth());

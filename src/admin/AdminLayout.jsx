@@ -2,13 +2,14 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import {
   FiGrid, FiBook, FiUsers, FiTag, FiLogOut,
-  FiHome, FiChevronRight
+  FiHome, FiChevronRight, FiImage
 } from 'react-icons/fi';
 import './Admin.css';
 
 const NAV = [
   { to: '/admin',          icon: FiGrid,  label: 'Dashboard', end: true },
   { to: '/admin/comics',   icon: FiBook,  label: 'Truyện' },
+  { to: '/admin/sliders',  icon: FiImage, label: 'Slider' },
   { to: '/admin/users',    icon: FiUsers, label: 'Người dùng' },
   { to: '/admin/genres',   icon: FiTag,   label: 'Thể loại' },
 ];

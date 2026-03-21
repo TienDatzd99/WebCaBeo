@@ -9,6 +9,14 @@ import {
 
 const EMPTY_COMIC = { title:'', author:'', description:'', cover_url:'', status:'ongoing', genre_ids:[] };
 const EMPTY_CHAP  = { number:'', title:'' };
+const STATUS_OPTIONS = [
+  { value: 'ongoing', label: 'Đang ra', badge: 'badge-ongoing' },
+  { value: 'completed', label: 'Hoàn thành', badge: 'badge-completed' },
+  { value: 'hiatus', label: 'Tạm ngưng', badge: 'badge-hiatus' },
+];
+
+const getStatusMeta = (status) =>
+  STATUS_OPTIONS.find((opt) => opt.value === status) || STATUS_OPTIONS[0];
 
 export default function AdminComics() {
   const [comics,   setComics]   = useState([]);
@@ -137,8 +145,8 @@ export default function AdminComics() {
                     </td>
                     <td style={{ textAlign:'center', color:'#a5b4fc' }}>{c.chapter_count}</td>
                     <td>
-                      <span className={`status-badge ${c.status === 'completed' ? 'badge-completed' : 'badge-ongoing'}`}>
-                        {c.status === 'completed' ? 'Hoàn thành' : 'Đang ra'}
+                      <span className={`status-badge ${getStatusMeta(c.status).badge}`}>
+                        {getStatusMeta(c.status).label}
                       </span>
                     </td>
                     <td style={{ color:'#10b981' }}>{c.views?.toLocaleString()}</td>
@@ -198,8 +206,9 @@ export default function AdminComics() {
                 <div className="form-group">
                   <label className="form-label">Trạng thái</label>
                   <select className="form-select" value={form.status} onChange={e => setForm(f => ({...f,status:e.target.value}))}>
-                    <option value="ongoing">Đang ra</option>
-                    <option value="completed">Hoàn thành</option>
+                    {STATUS_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
                   </select>
                 </div>
               </div>

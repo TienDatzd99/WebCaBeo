@@ -6,7 +6,7 @@ import { Autoplay, Pagination, EffectCreative } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 
-import { getComics } from '../api/comics.js';
+import { getComics, getFeaturedComics } from '../api/comics.js';
 import { CardSquare, CardPortrait } from '../components/ComicCard';
 import 'swiper/css/effect-creative';
 
@@ -19,7 +19,7 @@ export default function Home() {
 
     useEffect(() => {
         Promise.all([
-            getComics({ limit: 10 }),
+            getFeaturedComics(),
             getComics({ limit: 10, sort: 'views' }),
             getComics({ limit: 12 }),
         ])
