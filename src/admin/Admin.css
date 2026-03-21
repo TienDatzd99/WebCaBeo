@@ -457,16 +457,27 @@
 
 .cover-crop-preview-wrap {
   width: min(100%, 360px);
+  min-height: 240px;
   border-radius: 10px;
   overflow: hidden;
   border: 1px solid rgba(255,255,255,0.12);
   background: #111827;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.cover-crop-canvas {
+.cover-crop-image {
   width: 100%;
   height: auto;
   display: block;
+}
+
+.cover-crop-empty {
+  font-size: 0.8rem;
+  color: rgba(255,255,255,0.55);
+  text-align: center;
+  padding: 1.25rem;
 }
 
 .cover-crop-controls {
@@ -509,6 +520,10 @@
 .cover-crop-note {
   font-size: 0.78rem;
   color: #93c5fd;
+}
+
+.cover-crop-preview-wrap .ReactCrop {
+  max-width: 100%;
 }
 
 .cover-crop-error {

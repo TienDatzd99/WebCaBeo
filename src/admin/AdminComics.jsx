@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { FiPlus, FiEdit2, FiTrash2, FiList, FiX, FiSearch } from 'react-icons/fi';
+import ReactCrop, { centerCrop, makeAspectCrop } from 'react-image-crop';
+import 'react-image-crop/dist/ReactCrop.css';
 import {
   getAdminComics, createComic, updateComic, deleteComic,
   getAdminChapters, createChapter, updateChapter, deleteChapter,
@@ -18,7 +20,6 @@ const STATUS_OPTIONS = [
   { value: 'completed', label: 'Hoàn thành', badge: 'badge-completed' },
   { value: 'hiatus', label: 'Tạm ngưng', badge: 'badge-hiatus' },
 ];
-const CROP_BASE_WIDTH = 360;
 const ASPECT_OPTIONS = [
   { id: '2:3', label: '2:3 (dọc)', width: 2, height: 3 },
   { id: '16:9', label: '16:9', width: 16, height: 9 },
@@ -26,6 +27,18 @@ const ASPECT_OPTIONS = [
   { id: '4:5', label: '4:5', width: 4, height: 5 },
   { id: '1:1', label: '1:1', width: 1, height: 1 },
 ];
+
+const createCenteredCrop = (mediaWidth, mediaHeight, aspect) =>
+  centerCrop(
+    makeAspectCrop(
+      { unit: '%', width: 80 },
+      aspect,
+      mediaWidth,
+      mediaHeight
+    ),
+    mediaWidth,
+    mediaHeight
+  );
 
 const getStatusMeta = (status) =>
   STATUS_OPTIONS.find((opt) => opt.value === status) || STATUS_OPTIONS[0];
@@ -48,16 +61,15 @@ export default function AdminComics() {
   const [newInitChap, setNewInitChap] = useState(EMPTY_INITIAL_CHAP);
   const [saving,     setSaving]     = useState(false);
   const [cropModalOpen, setCropModalOpen] = useState(false);
-  const [cropImage, setCropImage] = useState(null);
+  const [cropImageSrc, setCropImageSrc] = useState('');
   const [cropImageLabel, setCropImageLabel] = useState('');
-  const [cropZoom, setCropZoom] = useState(1);
-  const [cropOffsetX, setCropOffsetX] = useState(0);
-  const [cropOffsetY, setCropOffsetY] = useState(0);
+  const [cropRect, setCropRect] = useState();
+  const [completedCrop, setCompletedCrop] = useState(null);
   const [cropAspect, setCropAspect] = useState(ASPECT_OPTIONS[0].id);
   const [cropLoading, setCropLoading] = useState(false);
   const [cropError, setCropError] = useState('');
   const visibleCoverInputRef = useRef(null);
-  const cropCanvasRef = useRef(null);
+  const cropImageRef = useRef(null);
 
   const LIMIT = 15;
   const selectedAspect = useMemo(
@@ -65,11 +77,10 @@ export default function AdminComics() {
     [cropAspect]
   );
 
-  const cropSize = useMemo(() => {
-    const width = CROP_BASE_WIDTH;
-    const height = Math.round((width * selectedAspect.height) / selectedAspect.width);
-    return { width, height };
-  }, [selectedAspect]);
+  const selectedAspectRatio = useMemo(
+    () => selectedAspect.width / selectedAspect.height,
+    [selectedAspect]
+  );
 
   const load = useCallback(() => {
     setLoading(true);
@@ -179,36 +190,13 @@ export default function AdminComics() {
   }));
 
   const resetCropperState = useCallback(() => {
-    setCropImage(null);
+    setCropImageSrc('');
     setCropImageLabel('');
-    setCropZoom(1);
-    setCropOffsetX(0);
-    setCropOffsetY(0);
+    setCropRect(undefined);
+    setCompletedCrop(null);
     setCropAspect(ASPECT_OPTIONS[0].id);
     setCropLoading(false);
     setCropError('');
-  }, []);
-
-  const drawCropPreview = useCallback((image, zoom, offsetX, offsetY) => {
-    const canvas = cropCanvasRef.current;
-    if (!canvas || !image) return;
-
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const canvasWidth = canvas.width;
-    const canvasHeight = canvas.height;
-    const baseScale = Math.max(canvasWidth / image.width, canvasHeight / image.height);
-    const finalScale = baseScale * zoom;
-    const drawWidth = image.width * finalScale;
-    const drawHeight = image.height * finalScale;
-    const dx = (canvasWidth - drawWidth) / 2 + (offsetX / 100) * canvasWidth;
-    const dy = (canvasHeight - drawHeight) / 2 + (offsetY / 100) * canvasHeight;
-
-    ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-    ctx.fillStyle = '#111827';
-    ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-    ctx.drawImage(image, dx, dy, drawWidth, drawHeight);
   }, []);
 
   const openCropper = () => {
@@ -220,20 +208,19 @@ export default function AdminComics() {
     setCropLoading(true);
     setCropError('');
     try {
-      const image = await new Promise((resolve, reject) => {
+      await new Promise((resolve, reject) => {
         const img = new Image();
         if (typeof source === 'string' && /^https?:\/\//i.test(source)) {
           img.crossOrigin = 'anonymous';
         }
-        img.onload = () => resolve(img);
+        img.onload = () => resolve(true);
         img.onerror = () => reject(new Error('Không tải được ảnh'));
         img.src = source;
       });
-      setCropImage(image);
+      setCropImageSrc(source);
       setCropImageLabel(label || 'Ảnh mới');
-      setCropZoom(1);
-      setCropOffsetX(0);
-      setCropOffsetY(0);
+      setCropRect(undefined);
+      setCompletedCrop(null);
     } catch {
       setCropError('Không thể tải ảnh để cắt. Hãy thử tải ảnh từ máy để ổn định hơn.');
     } finally {
@@ -268,11 +255,33 @@ export default function AdminComics() {
   };
 
   const applyCroppedCover = () => {
-    const canvas = cropCanvasRef.current;
-    if (!canvas || !cropImage) return;
+    if (!completedCrop || !cropImageRef.current) return;
 
     try {
-      const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.9);
+      const canvas = document.createElement('canvas');
+      const image = cropImageRef.current;
+      const pixelRatio = window.devicePixelRatio || 1;
+      canvas.width = Math.floor(completedCrop.width * pixelRatio);
+      canvas.height = Math.floor(completedCrop.height * pixelRatio);
+
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+
+      ctx.scale(pixelRatio, pixelRatio);
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(
+        image,
+        completedCrop.x,
+        completedCrop.y,
+        completedCrop.width,
+        completedCrop.height,
+        0,
+        0,
+        completedCrop.width,
+        completedCrop.height
+      );
+
+      const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.92);
       setForm((f) => ({ ...f, cover_url: croppedDataUrl }));
       setCropModalOpen(false);
       resetCropperState();
@@ -282,9 +291,11 @@ export default function AdminComics() {
   };
 
   useEffect(() => {
-    if (!cropModalOpen || !cropImage) return;
-    drawCropPreview(cropImage, cropZoom, cropOffsetX, cropOffsetY);
-  }, [cropModalOpen, cropImage, cropZoom, cropOffsetX, cropOffsetY, cropSize, drawCropPreview]);
+    const image = cropImageRef.current;
+    if (!cropImageSrc || !image) return;
+    setCropRect(createCenteredCrop(image.naturalWidth || image.width, image.naturalHeight || image.height, selectedAspectRatio));
+    setCompletedCrop(null);
+  }, [cropAspect, cropImageSrc, selectedAspectRatio]);
 
   /* Chapter modal */
   const openChaps = async (comic) => {
@@ -575,12 +586,29 @@ export default function AdminComics() {
             <div className="modal-body">
               <div className="cover-crop-grid">
                 <div className="cover-crop-preview-wrap">
-                  <canvas
-                    ref={cropCanvasRef}
-                    width={cropSize.width}
-                    height={cropSize.height}
-                    className="cover-crop-canvas"
-                  />
+                    {cropImageSrc ? (
+                      <ReactCrop
+                        crop={cropRect}
+                        onChange={(pixelCrop, percentCrop) => setCropRect(percentCrop)}
+                        onComplete={(pixelCrop) => setCompletedCrop(pixelCrop)}
+                        aspect={selectedAspectRatio}
+                        minWidth={90}
+                        ruleOfThirds
+                      >
+                        <img
+                          ref={cropImageRef}
+                          src={cropImageSrc}
+                          alt="Crop"
+                          className="cover-crop-image"
+                          onLoad={(event) => {
+                            const { naturalWidth, naturalHeight } = event.currentTarget;
+                            setCropRect(createCenteredCrop(naturalWidth, naturalHeight, selectedAspectRatio));
+                          }}
+                        />
+                      </ReactCrop>
+                    ) : (
+                      <div className="cover-crop-empty">Chọn ảnh để bắt đầu kéo khung cắt.</div>
+                    )}
                 </div>
 
                 <div className="cover-crop-controls">
@@ -606,41 +634,7 @@ export default function AdminComics() {
                     </div>
                   </div>
 
-                  <div className="cover-crop-control">
-                    <label className="form-label">Zoom</label>
-                    <input
-                      type="range"
-                      min="1"
-                      max="3"
-                      step="0.01"
-                      value={cropZoom}
-                      onChange={(e) => setCropZoom(Number(e.target.value))}
-                    />
-                  </div>
-
-                  <div className="cover-crop-control">
-                    <label className="form-label">Ngang</label>
-                    <input
-                      type="range"
-                      min="-50"
-                      max="50"
-                      step="1"
-                      value={cropOffsetX}
-                      onChange={(e) => setCropOffsetX(Number(e.target.value))}
-                    />
-                  </div>
-
-                  <div className="cover-crop-control">
-                    <label className="form-label">Dọc</label>
-                    <input
-                      type="range"
-                      min="-50"
-                      max="50"
-                      step="1"
-                      value={cropOffsetY}
-                      onChange={(e) => setCropOffsetY(Number(e.target.value))}
-                    />
-                  </div>
+                  <div className="cover-crop-note">Kéo cả khung để di chuyển và kéo các góc để đổi vùng cắt.</div>
 
                   {cropLoading && <div className="cover-crop-note">Đang tải ảnh...</div>}
                   {cropError && <div className="cover-crop-error">{cropError}</div>}
@@ -649,7 +643,7 @@ export default function AdminComics() {
             </div>
             <div className="modal-footer">
               <button className="btn-sm btn-edit" onClick={() => setCropModalOpen(false)}>Hủy</button>
-              <button className="btn-primary" onClick={applyCroppedCover} disabled={!cropImage || cropLoading}>
+              <button className="btn-primary" onClick={applyCroppedCover} disabled={!completedCrop || cropLoading}>
                 Dùng ảnh đã cắt
               </button>
             </div>
