@@ -73,6 +73,11 @@ export default function ComicDetail() {
   const firstChap  = chapters.length ? chapters[chapters.length - 1] : null;
   const latestChap = chapters.length ? chapters[0] : null;
   const lastDate   = chapters.length ? new Date(chapters[0].created_at).toLocaleDateString('vi-VN') : '—';
+  const audioHref  = comic.audio_url
+    ? (comic.audio_url.startsWith('http://') || comic.audio_url.startsWith('https://')
+      ? comic.audio_url
+      : `https://${comic.audio_url}`)
+    : '';
 
   /* fake reviews for demo */
   const reviews = [
@@ -127,6 +132,11 @@ export default function ComicDetail() {
             {/* Action buttons */}
             <div className="cd-actions">
               {firstChap  && <Link to={`/read/${id}/${firstChap.id}`}  className="cd-btn-primary">▶ Bắt đầu đọc</Link>}
+              {audioHref && (
+                <a href={audioHref} target="_blank" rel="noreferrer" className="cd-btn-red">
+                  ▶ Nghe audio
+                </a>
+              )}
               {latestChap && <Link to={`/read/${id}/${latestChap.id}`} className="cd-btn-red">▶ Đọc mới nhất</Link>}
               <button className={`cd-btn-glass ${faved ? 'faved' : ''}`} onClick={toggleFav}>
                 <FiHeart size={14}/> Yêu thích
