@@ -268,25 +268,31 @@ export default function AdminComics() {
     try {
       const canvas = document.createElement('canvas');
       const image = cropImageRef.current;
-      const pixelRatio = window.devicePixelRatio || 1;
-      canvas.width = Math.floor(completedCrop.width * pixelRatio);
-      canvas.height = Math.floor(completedCrop.height * pixelRatio);
+      const scaleX = image.naturalWidth / image.width;
+      const scaleY = image.naturalHeight / image.height;
+
+      const sourceX = Math.max(0, Math.floor(completedCrop.x * scaleX));
+      const sourceY = Math.max(0, Math.floor(completedCrop.y * scaleY));
+      const sourceWidth = Math.max(1, Math.floor(completedCrop.width * scaleX));
+      const sourceHeight = Math.max(1, Math.floor(completedCrop.height * scaleY));
+
+      canvas.width = sourceWidth;
+      canvas.height = sourceHeight;
 
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
-      ctx.scale(pixelRatio, pixelRatio);
       ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(
         image,
-        completedCrop.x,
-        completedCrop.y,
-        completedCrop.width,
-        completedCrop.height,
+        sourceX,
+        sourceY,
+        sourceWidth,
+        sourceHeight,
         0,
         0,
-        completedCrop.width,
-        completedCrop.height
+        sourceWidth,
+        sourceHeight
       );
 
       const croppedDataUrl = canvas.toDataURL('image/jpeg', 0.92);
