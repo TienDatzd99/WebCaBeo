@@ -70,8 +70,12 @@ export default function AdminComics() {
     setSaving(true);
     try {
       if (comicModal === 'create') {
+        const normalizedAuthor = (form.author || '').trim();
         const payload = {
           ...form,
+          // Backward-compat: old backend versions still require a truthy author field.
+          author: normalizedAuthor || ' ',
+          translator: (form.translator || '').trim(),
           chapters: (form.initial_chapters || [])
             .map((ch) => ({
               number: Number(ch.number),
@@ -82,7 +86,13 @@ export default function AdminComics() {
         };
         await createComic(payload);
       }
-      else await updateComic(comicModal.id, form);
+      else {
+        await updateComic(comicModal.id, {
+          ...form,
+          author: (form.author || '').trim(),
+          translator: (form.translator || '').trim(),
+        });
+      }
       setComicModal(null);
       load();
     } finally { setSaving(false); }
