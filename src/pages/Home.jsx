@@ -42,20 +42,6 @@ export default function Home() {
     const activeHomeCover = activeComic?.home_cover_url || activeComic?.cover_url || '';
     const sliderItemClass = 'w-[85%] shrink-0 sm:w-[47%] lg:w-[24%] xl:w-[calc((100%-80px)/5)]';
 
-    // Định nghĩa mảng sai số để tạo sự khác biệt nhỏ về góc/vị trí giữa các thẻ ở vai trò Prev/Next
-const CARD_DNA = [
-  // Tất cả x, y đều >= 0 để đẩy từ góc TRÊN - TRÁI vào trong
-  { s: 1.0,  x: 0,  y: 0 },   // P1: Full khung chuẩn
-  { s: 0.8,  x: 0, y: 0 },  // P2: Nhỏ 80%, hơi lệch khỏi góc trái một chút
-  { s: 0.75, x: 0,  y: 0 },   // P3: Nhỏ 75%, hít gần như sát sạt góc trái
-  { s: 0.9,  x: 0, y: 0 },  // P4: To 90%, lệch vào trong một khoảng an toàn
-  { s: 0.7,  x: 40, y: 20 },  // P5: Nhỏ nhất (70%), nằm lơ lửng gần góc trái
-  { s: 0.85, x: 10, y: 15 },  // P6: Vừa phải, bám sát đỉnh trái
-  { s: 0.95, x: 5,  y: 0 },   // P7: Gần như full, hít sát lề trái
-  { s: 0.78, x: 30, y: 10 },  // P8: Lệch phải một chút nhưng vẫn từ góc trên
-  { s: 0.88, x: 0,  y: 20 },  // P9: Hít sát lề trái nhưng lùi xuống dưới một tí
-  { s: 0.82, x: 20, y: 5 },   // P10: Cân đối gần góc trên trái
-];
     const SkelCard = () => (
         <div className="w-full overflow-hidden rounded-xl bg-[#2d2d2d]">
             <div className="aspect-[4/3] w-full animate-pulse bg-[#3a3a3a]" />
@@ -144,78 +130,76 @@ const CARD_DNA = [
                                             }}
                                             className="w-full"
                                         >
-{featured.map((comic) => {
-    const homeCover = comic.home_cover_url || comic.cover_url;
-    const seedText = String(comic.id ?? '0');
-    let hash = 0;
-    for (let i = 0; i < seedText.length; i += 1) {
-        hash = ((hash << 5) - hash) + seedText.charCodeAt(i);
-        hash |= 0;
-    }
-    const positiveHash = Math.abs(hash);
-    // Keep the same top-left anchor for every slide; DNA defines visible size % of the card.
-    const sizeDNA = [100, 95, 90, 85, 80, 75, 70, 65, 60, 50];
-    const imageSize = sizeDNA[positiveHash % sizeDNA.length];
-    const imageScale = imageSize / 100;
+                                            {featured.map((comic) => {
+                                                const homeCover = comic.home_cover_url || comic.cover_url;
+                                                const seedText = String(comic.id ?? '0');
+                                                let hash = 0;
+                                                for (let i = 0; i < seedText.length; i += 1) {
+                                                    hash = ((hash << 5) - hash) + seedText.charCodeAt(i);
+                                                    hash |= 0;
+                                                }
+                                                const positiveHash = Math.abs(hash);
+                                                // Keep the same top-left anchor for every slide; DNA defines visible size % of the card.
+                                                const sizeDNA = [100, 95, 90, 85, 80, 75, 70, 65, 60, 50];
+                                                const imageSize = sizeDNA[positiveHash % sizeDNA.length];
+                                                const imageScale = imageSize / 100;
 
-    return (
-        <SwiperSlide key={comic.id} className="!w-[min(540px,75vw)] lg:!w-[min(600px,65vw)] xl:!w-[854px]">
-            {({ isActive, isNext }) => (
-                <Link
-                    to={`/comic/${comic.id}`}
-                    className={`group relative block w-full aspect-[2/1] bg-transparent transition-all duration-700 ${
-                        isActive ? 'z-30 shadow-2xl' : (isNext ? 'z-20 shadow-lg' : 'z-10 shadow-md')
-                    }`}
-                >
-                    <div className="absolute -inset-1.5 blur-[15px] rounded-[32px] transition-opacity duration-700" style={{ opacity: isActive ? 0.3 : 0.6 }} />
+                                                return (
+                                                    <SwiperSlide key={comic.id} className="!w-[min(540px,75vw)] lg:!w-[min(600px,65vw)] xl:!w-[854px]">
+                                                        {({ isActive, isNext }) => (
+                                                            <Link
+                                                                to={`/comic/${comic.id}`}
+                                                                className={`group relative block w-full aspect-[2/1] bg-transparent transition-all duration-700 ${isActive ? 'z-30 shadow-2xl' : (isNext ? 'z-20 shadow-lg' : 'z-10 shadow-md')
+                                                                    }`}
+                                                            >
+                                                                <div className="absolute -inset-1.5 blur-[15px] rounded-[32px] transition-opacity duration-700" style={{ opacity: isActive ? 0.3 : 0.6 }} />
 
-                    <div
-                        className="absolute inset-0 w-full h-full flex items-start justify-start transition-all duration-700 ease-in-out"
-                    >
-                        <div className="relative w-full h-full">
-                            <div className="absolute inset-0 overflow-hidden rounded-[32px]">
-                                <img
-                                    src={homeCover}
-                                    alt={comic.title}
-                                    className="absolute top-0 left-0 w-full h-full object-cover"
-                                    style={{
-                                        objectPosition: 'left top',
-                                        transform: `scale(${imageScale})`,
-                                        transformOrigin: 'top left',
-                                        filter: isActive ? 'brightness(1)' : 'brightness(0.68)',
-                                        clipPath: 'inset(0 round 32px)'
-                                    }}
-                                />
-                            </div>
+                                                                <div
+                                                                    className="absolute inset-0 w-full h-full flex items-start justify-start transition-all duration-700 ease-in-out"
+                                                                >
+                                                                    <div className="relative w-full h-full">
+                                                                        <div className="absolute inset-0 overflow-hidden rounded-[32px]">
+                                                                            <img
+                                                                                src={homeCover}
+                                                                                alt={comic.title}
+                                                                                className="absolute top-0 left-0 w-full h-full object-cover"
+                                                                                style={{
+                                                                                    objectPosition: 'left top',
+                                                                                    transform: `scale(${imageScale})`,
+                                                                                    transformOrigin: 'top left',
+                                                                                    filter: isActive ? 'brightness(1)' : 'brightness(0.68)',
+                                                                                    clipPath: 'inset(0 round 32px)'
+                                                                                }}
+                                                                            />
+                                                                        </div>
 
-                            <div
-                                className={`absolute right-4 top-1/2 -translate-y-1/2 z-20 w-[44%] max-w-[420px] transition-all duration-700 ${
-                                    isActive || isNext ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
-                                }`}
-                                style={{
-                                    transform: isNext ? 'translateY(-50%) scale(0.9)' : 'translateY(-50%) scale(1)',
-                                    transformOrigin: 'right center'
-                                }}
-                            >
-                                <h2
-                                    title={comic.title}
-                                    className="text-right text-2xl md:text-4xl font-bold text-white drop-shadow-[0_4px_14px_rgba(0,0,0,0.7)] leading-tight overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]"
-                                >
-                                    {comic.title}
-                                </h2>
-                                <div className="mt-3 flex justify-end">
-                                    <span className="bg-white/90 text-black text-[10px] md:text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
-                                        Dịch giả: {comic.translator || comic.author || 'Đang cập nhật'}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </Link>
-            )}
-        </SwiperSlide>
-    );
-})}
+                                                                        <div
+                                                                            className={`absolute right-4 top-1/2 -translate-y-1/2 z-20 w-[44%] max-w-[420px] transition-all duration-700 ${isActive || isNext ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
+                                                                                }`}
+                                                                            style={{
+                                                                                transform: isNext ? 'translateY(-50%) scale(0.9)' : 'translateY(-50%) scale(1)',
+                                                                                transformOrigin: 'right center'
+                                                                            }}
+                                                                        >
+                                                                            <h2
+                                                                                title={comic.title}
+                                                                                className="text-right text-2xl md:text-4xl font-bold text-white drop-shadow-[0_4px_14px_rgba(0,0,0,0.7)] leading-tight overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]"
+                                                                            >
+                                                                                {comic.title}
+                                                                            </h2>
+                                                                            <div className="mt-3 flex justify-end">
+                                                                                <span className="bg-white/90 text-black text-[10px] md:text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
+                                                                                    Dịch giả: {comic.translator || comic.author || 'Đang cập nhật'}
+                                                                                </span>
+                                                                            </div>
+                                                                        </div>
+                                                                    </div>
+                                                                </div>
+                                                            </Link>
+                                                        )}
+                                                    </SwiperSlide>
+                                                );
+                                            })}
                                         </Swiper>
 
                                         <div className="custom-pagination mt-2 flex w-full items-center justify-center" />
