@@ -156,6 +156,7 @@ const CARD_DNA = [
     // Keep the same top-left anchor for every slide; DNA defines visible size % of the card.
     const sizeDNA = [100, 95, 90, 85, 80, 75, 70, 65, 60, 50];
     const imageSize = sizeDNA[positiveHash % sizeDNA.length];
+    const imageScale = imageSize / 100;
 
     return (
         <SwiperSlide key={comic.id} className="!w-[min(540px,75vw)] lg:!w-[min(600px,65vw)] xl:!w-[854px]">
@@ -176,11 +177,11 @@ const CARD_DNA = [
                                 <img
                                     src={homeCover}
                                     alt={comic.title}
-                                    className="absolute top-0 left-0 object-cover"
+                                    className="absolute top-0 left-0 w-full h-full object-cover"
                                     style={{
-                                        width: `${imageSize}%`,
-                                        height: `${imageSize}%`,
                                         objectPosition: 'left top',
+                                        transform: `scale(${imageScale})`,
+                                        transformOrigin: 'top left',
                                         filter: isActive ? 'brightness(1)' : 'brightness(0.68)'
                                     }}
                                 />
