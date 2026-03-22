@@ -183,8 +183,8 @@ const CARD_DNA = [
             }}
           >
                         {/* THẺ BÀI THỰC SỰ */}
-                        <div className="relative w-full h-full overflow-hidden rounded-[32px]">
-                             <div className="absolute inset-0" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
+                        <div className="relative w-full h-full">
+                            <div className="absolute inset-0 overflow-hidden rounded-[32px]" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
                                     <img
                                         src={homeCover}
                                         alt={comic.title}
@@ -197,7 +197,7 @@ const CARD_DNA = [
                              </div>
 
                              <div
-                                 className={`absolute right-5 top-1/2 -translate-y-1/2 z-20 w-[46%] transition-all duration-700 ${
+                                 className={`absolute -right-2 top-1/2 -translate-y-1/2 z-20 w-[52%] transition-all duration-700 ${
                                      isActive || isNext ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
                                  }`}
                                  style={{
@@ -207,7 +207,7 @@ const CARD_DNA = [
                              >
                                  <h2
                                      title={comic.title}
-                                     className="text-right text-2xl md:text-4xl font-bold text-white drop-shadow-[0_4px_14px_rgba(0,0,0,0.7)] leading-tight overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]"
+                                     className="text-right text-2xl md:text-4xl font-bold text-white drop-shadow-[0_4px_14px_rgba(0,0,0,0.7)] leading-tight overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]"
                                  >
                                      {comic.title}
                                  </h2>
