@@ -146,83 +146,73 @@ const CARD_DNA = [
                                         >
 {featured.map((comic) => {
     const homeCover = comic.home_cover_url || comic.cover_url;
-  // 1. BĂM ID ĐỂ LẤY DNA CỐ ĐỊNH CHO ẢNH
-  const seedText = String(comic.id ?? '0');
-  let hash = 0;
-  for (let i = 0; i < seedText.length; i += 1) {
-    hash = ((hash << 5) - hash) + seedText.charCodeAt(i);
-    hash |= 0;
-  }
-  const positiveHash = Math.abs(hash);
-  const dna = CARD_DNA[positiveHash % CARD_DNA.length];
-  
-  // Crop ảnh ngẫu nhiên (Giữ nguyên)
-  const objX = (positiveHash % 10) * 10;
-  const objY = (Math.floor(positiveHash / 10) % 10) * 10;
+    const seedText = String(comic.id ?? '0');
+    let hash = 0;
+    for (let i = 0; i < seedText.length; i += 1) {
+        hash = ((hash << 5) - hash) + seedText.charCodeAt(i);
+        hash |= 0;
+    }
+    const positiveHash = Math.abs(hash);
+    const dna = CARD_DNA[positiveHash % CARD_DNA.length];
+    // Random from top-left only: offsets are always positive so framing starts at top-left region.
+    const objX = positiveHash % 26;
+    const objY = Math.floor(positiveHash / 13) % 22;
 
-  return (
-    <SwiperSlide key={comic.id} className="!w-[min(540px,75vw)] lg:!w-[min(600px,65vw)] xl:!w-[854px]">
-      {({ isActive, isNext }) => (
-        <Link
-          to={`/comic/${comic.id}`}
-          // Z-index: Main cao nhất (30), Next nhì (20), còn lại thấp (10)
-          className={`group relative block w-full aspect-[2/1] bg-transparent transition-all duration-700 ${
-            isActive ? 'z-30 shadow-2xl' : (isNext ? 'z-20 shadow-lg' : 'z-10 shadow-md')
-          }`}
-        >
-          {/* LỚP BỘ ĐỆM BLEND MÀU */}
-          <div className="absolute -inset-1.5 blur-[15px] rounded-[32px] transition-opacity duration-700"
-               style={{ opacity: isActive ? 0.3 : 0.6 }} />
+    return (
+        <SwiperSlide key={comic.id} className="!w-[min(540px,75vw)] lg:!w-[min(600px,65vw)] xl:!w-[854px]">
+            {({ isActive, isNext }) => (
+                <Link
+                    to={`/comic/${comic.id}`}
+                    className={`group relative block w-full aspect-[2/1] bg-transparent transition-all duration-700 ${
+                        isActive ? 'z-30 shadow-2xl' : (isNext ? 'z-20 shadow-lg' : 'z-10 shadow-md')
+                    }`}
+                >
+                    <div className="absolute -inset-1.5 blur-[15px] rounded-[32px] transition-opacity duration-700" style={{ opacity: isActive ? 0.3 : 0.6 }} />
 
-          {/* CONTAINER DI ĐỘNG (Dùng Flex Start để hít góc TRÊN - TRÁI) */}
-          <div
-            className="absolute inset-0 w-full h-full flex items-start justify-start transition-all duration-700 ease-in-out"
-            style={{
-              // Vị trí (x, y) và Scale (s) này sẽ đi theo ảnh đến bất cứ đâu
-              transform: `translate3d(${dna.x}px, ${dna.y}px, 0) scale(${dna.s})`,
-            }}
-          >
-                        {/* THẺ BÀI THỰC SỰ */}
+                    <div
+                        className="absolute inset-0 w-full h-full flex items-start justify-start transition-all duration-700 ease-in-out"
+                        style={{ transform: `translate3d(${dna.x}px, ${dna.y}px, 0) scale(${dna.s})` }}
+                    >
                         <div className="relative w-full h-full">
                             <div className="absolute inset-0 overflow-hidden rounded-[32px]" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
-                                    <img
-                                        src={homeCover}
-                                        alt={comic.title}
-                                        className="w-full h-full object-cover"
-                                        style={{ 
-                                            objectPosition: `${objX}% ${objY}%`,
-                                            filter: isActive ? 'brightness(1)' : 'brightness(0.68)'
-                                        }}
-                                    />
-                             </div>
+                                <img
+                                    src={homeCover}
+                                    alt={comic.title}
+                                    className="w-full h-full object-cover"
+                                    style={{
+                                        objectPosition: `${objX}% ${objY}%`,
+                                        filter: isActive ? 'brightness(1)' : 'brightness(0.68)'
+                                    }}
+                                />
+                            </div>
 
-                             <div
-                                 className={`absolute -right-2 top-1/2 -translate-y-1/2 z-20 w-[52%] transition-all duration-700 ${
-                                     isActive || isNext ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
-                                 }`}
-                                 style={{
-                                     transform: isNext ? 'translateY(-50%) scale(0.9)' : 'translateY(-50%) scale(1)',
-                                     transformOrigin: 'right center'
-                                 }}
-                             >
-                                 <h2
-                                     title={comic.title}
-                                     className="text-right text-2xl md:text-4xl font-bold text-white drop-shadow-[0_4px_14px_rgba(0,0,0,0.7)] leading-tight overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]"
-                                 >
-                                     {comic.title}
-                                 </h2>
-                                 <div className="mt-3 flex justify-end">
-                                     <span className="bg-white/90 text-black text-[10px] md:text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
-                                         Dịch giả: {comic.translator || comic.author || 'Đang cập nhật'}
-                                     </span>
-                                 </div>
-                             </div>
+                            <div
+                                className={`absolute right-4 top-1/2 -translate-y-1/2 z-20 w-[44%] max-w-[420px] transition-all duration-700 ${
+                                    isActive || isNext ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
+                                }`}
+                                style={{
+                                    transform: isNext ? 'translateY(-50%) scale(0.9)' : 'translateY(-50%) scale(1)',
+                                    transformOrigin: 'right center'
+                                }}
+                            >
+                                <h2
+                                    title={comic.title}
+                                    className="text-right text-2xl md:text-4xl font-bold text-white drop-shadow-[0_4px_14px_rgba(0,0,0,0.7)] leading-tight overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]"
+                                >
+                                    {comic.title}
+                                </h2>
+                                <div className="mt-3 flex justify-end">
+                                    <span className="bg-white/90 text-black text-[10px] md:text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
+                                        Dịch giả: {comic.translator || comic.author || 'Đang cập nhật'}
+                                    </span>
+                                </div>
+                            </div>
                         </div>
-          </div>
-        </Link>
-      )}
-    </SwiperSlide>
-  );
+                    </div>
+                </Link>
+            )}
+        </SwiperSlide>
+    );
 })}
                                         </Swiper>
 
