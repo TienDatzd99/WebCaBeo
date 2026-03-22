@@ -15,6 +15,10 @@ const POPULAR_LIMIT = 10;
 const LATEST_LIMIT = 10;
 
 export default function Home() {
+    const toTitleCase = (value = '') => String(value)
+        .toLocaleLowerCase('vi-VN')
+        .replace(/\p{L}+/gu, (word) => word.charAt(0).toLocaleUpperCase('vi-VN') + word.slice(1));
+
     const [featured, setFeatured] = useState([]);
     const [popular, setPopular] = useState([]);
     const [latest, setLatest] = useState([]);
@@ -40,6 +44,7 @@ export default function Home() {
 
     const activeComic = featured[activeIdx] || featured[0] || null;
     const activeHomeCover = activeComic?.home_cover_url || activeComic?.cover_url || '';
+    const activeDisplayTitle = toTitleCase(activeComic?.title || '');
     const sliderItemClass = 'w-[85%] shrink-0 sm:w-[47%] lg:w-[24%] xl:w-[calc((100%-80px)/5)]';
 
     const SkelCard = () => (
@@ -77,7 +82,7 @@ export default function Home() {
                                 {activeComic && (
                                     <>
                                         <h1 className="font-bold mt-4 mb-4 drop-shadow-lg text-[1.5rem] font-sans">
-                                            {activeComic.title}
+                                            {activeDisplayTitle}
                                         </h1>
                                         <p className="mb-6 text-lg drop-shadow text-sm whitespace-pre-line overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:6]">
                                             {activeComic.description || 'Theo dõi bộ truyện nổi bật đang được quan tâm nhất hôm nay.'}
@@ -132,6 +137,7 @@ export default function Home() {
                                         >
                                             {featured.map((comic) => {
                                                 const homeCover = comic.home_cover_url || comic.cover_url;
+                                                const displayTitle = toTitleCase(comic.title || '');
                                                 const seedText = String(comic.id ?? '0');
                                                 let hash = 0;
                                                 for (let i = 0; i < seedText.length; i += 1) {
@@ -161,7 +167,7 @@ export default function Home() {
                                                                         <div className="absolute inset-0 overflow-hidden rounded-[32px]">
                                                                             <img
                                                                                 src={homeCover}
-                                                                                alt={comic.title}
+                                                                                alt={displayTitle}
                                                                                 className="absolute top-0 left-0 w-full h-full object-cover"
                                                                                 style={{
                                                                                     objectPosition: 'left top',
@@ -182,13 +188,13 @@ export default function Home() {
                                                                             }}
                                                                         >
                                                                             <h2
-                                                                                title={comic.title}
-                                                                                className="text-right text-2xl md:text-4xl font-bold text-white drop-shadow-[0_4px_14px_rgba(0,0,0,0.7)] leading-tight overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]"
+                                                                                title={displayTitle}
+                                                                                className="text-center text-2xl md:text-4xl font-bold text-white drop-shadow-[0_4px_14px_rgba(0,0,0,0.7)] leading-tight overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]"
                                                                                 style={{ fontFamily: 'Itim, cursive' }}
                                                                             >
-                                                                                {comic.title}
+                                                                                {displayTitle}
                                                                             </h2>
-                                                                            <div className="mt-3 flex justify-end">
+                                                                            <div className="mt-3 flex justify-center">
                                                                                 <span className="bg-white/90 text-black text-[10px] md:text-xs font-bold px-2.5 py-1 rounded-full shadow-sm" style={{ fontFamily: 'Itim, cursive' }}>
                                                                                     Dịch giả: {comic.translator || comic.author || 'Đang cập nhật'}
                                                                                 </span>
