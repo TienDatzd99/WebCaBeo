@@ -184,11 +184,12 @@ export default function Home() {
                                                                             <h2
                                                                                 title={comic.title}
                                                                                 className="text-right text-2xl md:text-4xl font-bold text-white drop-shadow-[0_4px_14px_rgba(0,0,0,0.7)] leading-tight overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:3]"
+                                                                                style={{ fontFamily: 'Itim, cursive' }}
                                                                             >
                                                                                 {comic.title}
                                                                             </h2>
                                                                             <div className="mt-3 flex justify-end">
-                                                                                <span className="bg-white/90 text-black text-[10px] md:text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
+                                                                                <span className="bg-white/90 text-black text-[10px] md:text-xs font-bold px-2.5 py-1 rounded-full shadow-sm" style={{ fontFamily: 'Itim, cursive' }}>
                                                                                     Dịch giả: {comic.translator || comic.author || 'Đang cập nhật'}
                                                                                 </span>
                                                                             </div>
