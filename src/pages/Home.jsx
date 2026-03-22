@@ -173,7 +173,7 @@ const CARD_DNA = [
                         className="absolute inset-0 w-full h-full flex items-start justify-start transition-all duration-700 ease-in-out"
                     >
                         <div className="relative w-full h-full">
-                            <div className="absolute inset-0 overflow-hidden rounded-[32px]" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
+                            <div className="absolute inset-0 overflow-hidden rounded-[32px]">
                                 <img
                                     src={homeCover}
                                     alt={comic.title}
