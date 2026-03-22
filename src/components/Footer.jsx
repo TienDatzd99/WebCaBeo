@@ -5,7 +5,7 @@ const Footer = () => (
   <footer className="footer">
     <div className="footer-inner">
       <div className="footer-brand">
-        <Link to="/" className="footer-logo">🦈 Cá Mập</Link>
+        <Link to="/" className="footer-logo">Truyện Của Cá</Link>
         <p className="footer-tagline">Kho truyện cập nhật liên tục, đọc truyện hoàn toàn miễn phí.</p>
       </div>
       <div className="footer-cols">
@@ -28,7 +28,7 @@ const Footer = () => (
       </div>
     </div>
     <div className="footer-bar">
-      <p>&copy; {new Date().getFullYear()} Cá Mập. Mọi quyền được bảo lưu.</p>
+      <p>&copy; {new Date().getFullYear()} Truyện Của Cá. Mọi quyền được bảo lưu.</p>
     </div>
   </footer>
 );

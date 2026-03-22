@@ -36,7 +36,7 @@ const Login = () => {
   return (
     <div className="auth-page fade-in">
       <div className="auth-card">
-        <div className="auth-logo">🦈 Cá Mập</div>
+        <div className="auth-logo">Truyện Của Cá</div>
         <h1 className="auth-title">Đăng Nhập</h1>
         <p className="auth-sub">Chào mừng trở lại!</p>
 

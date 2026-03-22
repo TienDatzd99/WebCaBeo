@@ -37,7 +37,7 @@ const Header = () => {
         {/* Logo */}
         <Link to="/" className="logo">
           <span className="logo-shark">🦈</span>
-          <span className="logo-text">Cá Mập</span>
+          <span className="logo-text">Truyện Của Cá</span>
         </Link>
 
         {/* Desktop nav — matches camap.site header links */}

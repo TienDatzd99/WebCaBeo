@@ -51,5 +51,5 @@ app.use((req, res, next) => {
   return res.sendFile(path.join(__dirname, '../dist/index.html'));
 });
 app.listen(PORT, () => {
-  console.log(`🦈 Cá Mập API running at http://localhost:${PORT}`);
+  console.log(`Truyện Của Cá API running at http://localhost:${PORT}`);
 });

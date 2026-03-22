@@ -35,7 +35,7 @@ const Register = () => {
   return (
     <div className="auth-page fade-in">
       <div className="auth-card">
-        <div className="auth-logo">🦈 Cá Mập</div>
+        <div className="auth-logo">Truyện Của Cá</div>
         <h1 className="auth-title">Đăng Ký</h1>
         <p className="auth-sub">Tạo tài khoản để đọc truyện miễn phí!</p>
 
