@@ -146,13 +146,11 @@ export default function AdminComics() {
   };
 
   const requestCloseComicModal = useCallback(() => {
-    const currentSnapshot = buildComicModalSnapshot(form, newInitChap);
-    const isDirty = comicFormSnapshot && comicFormSnapshot !== currentSnapshot;
-    if (isDirty && !window.confirm('Bạn có thay đổi chưa lưu. Thoát ra sẽ mất dữ liệu, tiếp tục?')) {
+    if (!window.confirm('Bạn có chắc muốn thoát form này không? Dữ liệu chưa lưu có thể bị mất.')) {
       return;
     }
     setComicModal(null);
-  }, [comicFormSnapshot, form, newInitChap]);
+  }, []);
   const saveComic = async () => {
     setSaving(true);
     try {
