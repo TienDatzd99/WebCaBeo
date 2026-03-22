@@ -62,6 +62,17 @@ const normalizeComicForm = (form = EMPTY_COMIC) => ({
     .sort((a, b) => a.number - b.number),
 });
 
+const normalizeInitialChapterDraft = (draft = EMPTY_INITIAL_CHAP) => ({
+  number: (draft.number || '').toString().trim(),
+  title: (draft.title || '').trim(),
+  content: (draft.content || '').trim(),
+});
+
+const buildComicModalSnapshot = (form, initialChapDraft) => JSON.stringify({
+  form: normalizeComicForm(form),
+  draft: normalizeInitialChapterDraft(initialChapDraft),
+});
+
 export default function AdminComics() {
   const [comics,   setComics]   = useState([]);
   const [genres,   setGenres]   = useState([]);
@@ -115,9 +126,10 @@ export default function AdminComics() {
   /* Comic form */
   const openCreate = () => {
     const nextForm = { ...EMPTY_COMIC };
+    const nextDraft = { ...EMPTY_INITIAL_CHAP };
     setForm(nextForm);
-    setComicFormSnapshot(JSON.stringify(normalizeComicForm(nextForm)));
-    setNewInitChap(EMPTY_INITIAL_CHAP);
+    setComicFormSnapshot(buildComicModalSnapshot(nextForm, nextDraft));
+    setNewInitChap(nextDraft);
     setComicModal('create');
   };
   const openEdit   = (c) => {
@@ -126,18 +138,21 @@ export default function AdminComics() {
       genre_ids: (c.genre_names || '').split(',').map(g => genres.find(x => x.name === g.trim())?.id).filter(Boolean),
       initial_chapters: []
     };
+    const nextDraft = { ...EMPTY_INITIAL_CHAP };
     setForm(nextForm);
-    setComicFormSnapshot(JSON.stringify(normalizeComicForm(nextForm)));
+    setComicFormSnapshot(buildComicModalSnapshot(nextForm, nextDraft));
+    setNewInitChap(nextDraft);
     setComicModal(c);
   };
 
   const requestCloseComicModal = useCallback(() => {
-    const isDirty = comicFormSnapshot && comicFormSnapshot !== JSON.stringify(normalizeComicForm(form));
+    const currentSnapshot = buildComicModalSnapshot(form, newInitChap);
+    const isDirty = comicFormSnapshot && comicFormSnapshot !== currentSnapshot;
     if (isDirty && !window.confirm('Bạn có thay đổi chưa lưu. Thoát ra sẽ mất dữ liệu, tiếp tục?')) {
       return;
     }
     setComicModal(null);
-  }, [comicFormSnapshot, form]);
+  }, [comicFormSnapshot, form, newInitChap]);
   const saveComic = async () => {
     setSaving(true);
     try {
