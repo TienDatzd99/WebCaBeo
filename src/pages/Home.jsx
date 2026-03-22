@@ -153,8 +153,9 @@ const CARD_DNA = [
         hash |= 0;
     }
     const positiveHash = Math.abs(hash);
-    // Keep the same top-left anchor for every slide; only randomize zoom per-comic DNA.
-    const imageScale = 1 + ((positiveHash % 18) / 100);
+    // Keep the same top-left anchor for every slide; randomize size strongly per-comic DNA.
+    const scaleDNA = [1.0, 1.08, 1.16, 1.24, 1.32, 1.12, 1.2, 1.28, 1.36, 1.18];
+    const imageScale = scaleDNA[positiveHash % scaleDNA.length];
 
     return (
         <SwiperSlide key={comic.id} className="!w-[min(540px,75vw)] lg:!w-[min(600px,65vw)] xl:!w-[854px]">
