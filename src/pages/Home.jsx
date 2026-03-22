@@ -154,9 +154,8 @@ const CARD_DNA = [
     }
     const positiveHash = Math.abs(hash);
     const dna = CARD_DNA[positiveHash % CARD_DNA.length];
-    // Random from top-left only: offsets are always positive so framing starts at top-left region.
-    const objX = positiveHash % 26;
-    const objY = Math.floor(positiveHash / 13) % 22;
+    // Keep the same top-left anchor for every slide; only randomize zoom per-comic DNA.
+    const imageScale = 1 + ((positiveHash % 18) / 100);
 
     return (
         <SwiperSlide key={comic.id} className="!w-[min(540px,75vw)] lg:!w-[min(600px,65vw)] xl:!w-[854px]">
@@ -180,7 +179,9 @@ const CARD_DNA = [
                                     alt={comic.title}
                                     className="w-full h-full object-cover"
                                     style={{
-                                        objectPosition: `${objX}% ${objY}%`,
+                                        objectPosition: 'left top',
+                                        transform: `scale(${imageScale})`,
+                                        transformOrigin: 'left top',
                                         filter: isActive ? 'brightness(1)' : 'brightness(0.68)'
                                     }}
                                 />
