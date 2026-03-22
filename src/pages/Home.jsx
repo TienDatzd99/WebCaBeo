@@ -153,7 +153,6 @@ const CARD_DNA = [
         hash |= 0;
     }
     const positiveHash = Math.abs(hash);
-    const dna = CARD_DNA[positiveHash % CARD_DNA.length];
     // Keep the same top-left anchor for every slide; only randomize zoom per-comic DNA.
     const imageScale = 1 + ((positiveHash % 18) / 100);
 
@@ -170,7 +169,6 @@ const CARD_DNA = [
 
                     <div
                         className="absolute inset-0 w-full h-full flex items-start justify-start transition-all duration-700 ease-in-out"
-                        style={{ transform: `translate3d(${dna.x}px, ${dna.y}px, 0) scale(${dna.s})` }}
                     >
                         <div className="relative w-full h-full">
                             <div className="absolute inset-0 overflow-hidden rounded-[32px]" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
