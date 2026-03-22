@@ -182,7 +182,8 @@ const CARD_DNA = [
                                         objectPosition: 'left top',
                                         transform: `scale(${imageScale})`,
                                         transformOrigin: 'top left',
-                                        filter: isActive ? 'brightness(1)' : 'brightness(0.68)'
+                                        filter: isActive ? 'brightness(1)' : 'brightness(0.68)',
+                                        clipPath: 'inset(0 round 32px)'
                                     }}
                                 />
                             </div>
