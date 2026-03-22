@@ -183,8 +183,8 @@ const CARD_DNA = [
             }}
           >
                         {/* THẺ BÀI THỰC SỰ */}
-                        <div className="relative w-full h-full overflow-hidden rounded-[32px] bg-[#171a21] flex flex-col">
-                             <div className="relative h-[72%] w-full" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
+                        <div className="relative w-full h-full overflow-hidden rounded-[32px]">
+                             <div className="absolute inset-0" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
                                     <img
                                         src={homeCover}
                                         alt={comic.title}
@@ -197,19 +197,23 @@ const CARD_DNA = [
                              </div>
 
                              <div
-                                 className={`h-[28%] px-4 py-3 text-white transition-all duration-500 ${
-                                     isActive || isNext ? 'opacity-100 bg-[#1f2430]' : 'opacity-0 bg-transparent'
+                                 className={`absolute right-5 top-1/2 -translate-y-1/2 z-20 w-[46%] transition-all duration-700 ${
+                                     isActive || isNext ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-8'
                                  }`}
+                                 style={{
+                                     transform: isNext ? 'translateY(-50%) scale(0.9)' : 'translateY(-50%) scale(1)',
+                                     transformOrigin: 'right center'
+                                 }}
                              >
                                  <h2
                                      title={comic.title}
-                                     className="text-left text-sm md:text-base font-bold uppercase leading-tight overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]"
+                                     className="text-right text-2xl md:text-4xl font-bold text-white drop-shadow-[0_4px_14px_rgba(0,0,0,0.7)] leading-tight overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]"
                                  >
                                      {comic.title}
                                  </h2>
-                                 <div className="mt-2 flex justify-end">
-                                     <span className="bg-white text-black text-[10px] font-bold px-2 py-1 rounded shadow-sm">
-                                         DỊCH GIẢ: {comic.translator || comic.author || 'Đang cập nhật'}
+                                 <div className="mt-3 flex justify-end">
+                                     <span className="bg-white/90 text-black text-[10px] md:text-xs font-bold px-2.5 py-1 rounded-full shadow-sm">
+                                         Dịch giả: {comic.translator || comic.author || 'Đang cập nhật'}
                                      </span>
                                  </div>
                              </div>
