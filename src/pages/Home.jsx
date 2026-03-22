@@ -40,6 +40,7 @@ export default function Home() {
 
     const activeComic = featured[activeIdx] || featured[0] || null;
     const activeHomeCover = activeComic?.home_cover_url || activeComic?.cover_url || '';
+    const isActiveTitleLong = (activeComic?.title || '').length > 44;
     const sliderItemClass = 'w-[85%] shrink-0 sm:w-[47%] lg:w-[24%] xl:w-[calc((100%-80px)/5)]';
 
     // Định nghĩa mảng sai số để tạo sự khác biệt nhỏ về góc/vị trí giữa các thẻ ở vai trò Prev/Next
@@ -146,6 +147,7 @@ const CARD_DNA = [
                                         >
 {featured.map((comic) => {
     const homeCover = comic.home_cover_url || comic.cover_url;
+    const isLongTitle = (comic.title || '').length > 44;
   // 1. BĂM ID ĐỂ LẤY DNA CỐ ĐỊNH CHO ẢNH
   const seedText = String(comic.id ?? '0');
   let hash = 0;
@@ -203,13 +205,16 @@ const CARD_DNA = [
 
                {/* TEXT: Hiện trên Main và Next (nhỏ hơn) */}
                <div className={`absolute right-10 top-1/2 -translate-y-1/2 z-20 text-white w-2/5 transition-all duration-700 ${
-                 isActive || isNext ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'
+                                 (isActive || isNext) && !isLongTitle ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'
                }`}
                style={{ 
                  transform: isNext ? 'scale(0.8)' : 'scale(1)',
                  transformOrigin: 'right center'
                }}>
-                  <h2 className="text-right text-xl md:text-3xl font-bold mb-2 drop-shadow-lg uppercase leading-tight">
+                                    <h2
+                                        title={comic.title}
+                                        className="text-right text-xl md:text-3xl font-bold mb-2 drop-shadow-lg uppercase leading-tight overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]"
+                                    >
                     {comic.title}
                   </h2>
                   <div className="flex justify-end mt-3">
@@ -228,6 +233,19 @@ const CARD_DNA = [
                                         </Swiper>
 
                                         <div className="custom-pagination mt-2 flex w-full items-center justify-center" />
+                                                                                {activeComic && (
+                                                                                    <div className="mt-3 rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-white">
+                                                                                        <p
+                                                                                            title={activeComic.title}
+                                                                                            className={`font-semibold leading-tight ${isActiveTitleLong ? 'text-base md:text-lg' : 'text-lg md:text-xl'} overflow-hidden text-ellipsis whitespace-nowrap`}
+                                                                                        >
+                                                                                            {activeComic.title}
+                                                                                        </p>
+                                                                                        <p className="mt-1 text-xs text-white/80">
+                                                                                            DỊCH GIẢ: {activeComic.translator || activeComic.author || 'Đang cập nhật'}
+                                                                                        </p>
+                                                                                    </div>
+                                                                                )}
                                     </div>
                                 )}
                             </div>
