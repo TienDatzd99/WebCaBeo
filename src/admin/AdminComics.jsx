@@ -42,6 +42,26 @@ const createCenteredCrop = (mediaWidth, mediaHeight, aspect) =>
 const getStatusMeta = (status) =>
   STATUS_OPTIONS.find((opt) => opt.value === status) || STATUS_OPTIONS[0];
 
+const normalizeComicForm = (form = EMPTY_COMIC) => ({
+  title: (form.title || '').trim(),
+  author: (form.author || '').trim(),
+  translator: (form.translator || '').trim(),
+  description: (form.description || '').trim(),
+  cover_url: (form.cover_url || '').trim(),
+  home_cover_url: (form.home_cover_url || '').trim(),
+  audio_url: (form.audio_url || '').trim(),
+  status: form.status || 'ongoing',
+  genre_ids: [...(form.genre_ids || [])].map(Number).sort((a, b) => a - b),
+  initial_chapters: [...(form.initial_chapters || [])]
+    .map((ch) => ({
+      number: Number(ch?.number),
+      title: (ch?.title || '').trim(),
+      content: (ch?.content || '').trim(),
+    }))
+    .filter((ch) => Number.isFinite(ch.number))
+    .sort((a, b) => a.number - b.number),
+});
+
 export default function AdminComics() {
   const [comics,   setComics]   = useState([]);
   const [genres,   setGenres]   = useState([]);
@@ -59,6 +79,7 @@ export default function AdminComics() {
   const [chapForm,   setChapForm]   = useState(EMPTY_CHAP);
   const [newInitChap, setNewInitChap] = useState(EMPTY_INITIAL_CHAP);
   const [saving,     setSaving]     = useState(false);
+  const [comicFormSnapshot, setComicFormSnapshot] = useState('');
   const [cropModalOpen, setCropModalOpen] = useState(false);
   const [cropImageSrc, setCropImageSrc] = useState('');
   const [cropImageLabel, setCropImageLabel] = useState('');
@@ -93,18 +114,30 @@ export default function AdminComics() {
 
   /* Comic form */
   const openCreate = () => {
-    setForm(EMPTY_COMIC);
+    const nextForm = { ...EMPTY_COMIC };
+    setForm(nextForm);
+    setComicFormSnapshot(JSON.stringify(normalizeComicForm(nextForm)));
     setNewInitChap(EMPTY_INITIAL_CHAP);
     setComicModal('create');
   };
   const openEdit   = (c) => {
-    setForm({
+    const nextForm = {
       ...c,
       genre_ids: (c.genre_names || '').split(',').map(g => genres.find(x => x.name === g.trim())?.id).filter(Boolean),
       initial_chapters: []
-    });
+    };
+    setForm(nextForm);
+    setComicFormSnapshot(JSON.stringify(normalizeComicForm(nextForm)));
     setComicModal(c);
   };
+
+  const requestCloseComicModal = useCallback(() => {
+    const isDirty = comicFormSnapshot && comicFormSnapshot !== JSON.stringify(normalizeComicForm(form));
+    if (isDirty && !window.confirm('Bạn có thay đổi chưa lưu. Thoát ra sẽ mất dữ liệu, tiếp tục?')) {
+      return;
+    }
+    setComicModal(null);
+  }, [comicFormSnapshot, form]);
   const saveComic = async () => {
     setSaving(true);
     try {
@@ -439,11 +472,11 @@ export default function AdminComics() {
 
       {/* ── Comic Modal ── */}
       {comicModal !== null && (
-        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && setComicModal(null)}>
+        <div className="modal-overlay" onClick={e => e.target === e.currentTarget && requestCloseComicModal()}>
           <div className="modal-box">
             <div className="modal-header">
               <h3>{comicModal === 'create' ? '➕ Thêm truyện mới' : '✏️ Sửa truyện'}</h3>
-              <button className="modal-close" onClick={() => setComicModal(null)}><FiX /></button>
+              <button className="modal-close" onClick={requestCloseComicModal}><FiX /></button>
             </div>
             <div className="modal-body">
               <div className="form-row">
@@ -621,7 +654,7 @@ export default function AdminComics() {
               )}
             </div>
             <div className="modal-footer">
-              <button className="btn-sm btn-edit" onClick={() => setComicModal(null)}>Hủy</button>
+              <button className="btn-sm btn-edit" onClick={requestCloseComicModal}>Hủy</button>
               <button className="btn-primary" onClick={saveComic} disabled={saving}>
                 {saving ? 'Đang lưu...' : 'Lưu lại'}
               </button>
