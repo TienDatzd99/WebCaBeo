@@ -40,7 +40,6 @@ export default function Home() {
 
     const activeComic = featured[activeIdx] || featured[0] || null;
     const activeHomeCover = activeComic?.home_cover_url || activeComic?.cover_url || '';
-    const isActiveTitleLong = (activeComic?.title || '').length > 44;
     const sliderItemClass = 'w-[85%] shrink-0 sm:w-[47%] lg:w-[24%] xl:w-[calc((100%-80px)/5)]';
 
     // Định nghĩa mảng sai số để tạo sự khác biệt nhỏ về góc/vị trí giữa các thẻ ở vai trò Prev/Next
@@ -147,7 +146,6 @@ const CARD_DNA = [
                                         >
 {featured.map((comic) => {
     const homeCover = comic.home_cover_url || comic.cover_url;
-    const isLongTitle = (comic.title || '').length > 44;
   // 1. BĂM ID ĐỂ LẤY DNA CỐ ĐỊNH CHO ẢNH
   const seedText = String(comic.id ?? '0');
   let hash = 0;
@@ -184,46 +182,38 @@ const CARD_DNA = [
               transform: `translate3d(${dna.x}px, ${dna.y}px, 0) scale(${dna.s})`,
             }}
           >
-            {/* THẺ BÀI THỰC SỰ */}
-            <div className="relative w-full h-full overflow-hidden rounded-[32px] ">
-               <div className="absolute inset-0" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
-                  
-                  <img
+                        {/* THẺ BÀI THỰC SỰ */}
+                        <div className="relative w-full h-full overflow-hidden rounded-[32px] bg-[#171a21] flex flex-col">
+                             <div className="relative h-[72%] w-full" style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}>
+                                    <img
                                         src={homeCover}
-                    alt={comic.title}
-                    className="w-full h-full object-cover"
-                    style={{ 
-                      objectPosition: `${objX}% ${objY}%`,
-                      // Thẻ không phải Main thì hơi tối xuống cho sâu
-                      filter: isActive ? 'brightness(1)' : 'brightness(0.6)'
-                    }}
-                  />
+                                        alt={comic.title}
+                                        className="w-full h-full object-cover"
+                                        style={{ 
+                                            objectPosition: `${objX}% ${objY}%`,
+                                            filter: isActive ? 'brightness(1)' : 'brightness(0.68)'
+                                        }}
+                                    />
+                             </div>
 
-                  {/* LỚP MỜ (Hiện trên Main và Next để đọc chữ) */}
-                
-               </div>
-
-               {/* TEXT: Hiện trên Main và Next (nhỏ hơn) */}
-               <div className={`absolute right-10 top-1/2 -translate-y-1/2 z-20 text-white w-2/5 transition-all duration-700 ${
-                                 (isActive || isNext) && !isLongTitle ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-10'
-               }`}
-               style={{ 
-                 transform: isNext ? 'scale(0.8)' : 'scale(1)',
-                 transformOrigin: 'right center'
-               }}>
-                                    <h2
-                                        title={comic.title}
-                                        className="text-right text-xl md:text-3xl font-bold mb-2 drop-shadow-lg uppercase leading-tight overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]"
-                                    >
-                    {comic.title}
-                  </h2>
-                  <div className="flex justify-end mt-3">
-                    <span className="bg-white text-black text-[10px] font-bold px-2 py-1 rounded shadow-sm">
-                                            DỊCH GIẢ: {comic.translator || comic.author || 'Đang cập nhật'}
-                    </span>
-                  </div>
-               </div>
-            </div>
+                             <div
+                                 className={`h-[28%] px-4 py-3 text-white transition-all duration-500 ${
+                                     isActive || isNext ? 'opacity-100 bg-[#1f2430]' : 'opacity-0 bg-transparent'
+                                 }`}
+                             >
+                                 <h2
+                                     title={comic.title}
+                                     className="text-left text-sm md:text-base font-bold uppercase leading-tight overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:2]"
+                                 >
+                                     {comic.title}
+                                 </h2>
+                                 <div className="mt-2 flex justify-end">
+                                     <span className="bg-white text-black text-[10px] font-bold px-2 py-1 rounded shadow-sm">
+                                         DỊCH GIẢ: {comic.translator || comic.author || 'Đang cập nhật'}
+                                     </span>
+                                 </div>
+                             </div>
+                        </div>
           </div>
         </Link>
       )}
@@ -233,19 +223,6 @@ const CARD_DNA = [
                                         </Swiper>
 
                                         <div className="custom-pagination mt-2 flex w-full items-center justify-center" />
-                                                                                {activeComic && (
-                                                                                    <div className="mt-3 rounded-2xl border border-white/10 bg-black/35 px-4 py-3 text-white">
-                                                                                        <p
-                                                                                            title={activeComic.title}
-                                                                                            className={`font-semibold leading-tight ${isActiveTitleLong ? 'text-base md:text-lg' : 'text-lg md:text-xl'} overflow-hidden text-ellipsis whitespace-nowrap`}
-                                                                                        >
-                                                                                            {activeComic.title}
-                                                                                        </p>
-                                                                                        <p className="mt-1 text-xs text-white/80">
-                                                                                            DỊCH GIẢ: {activeComic.translator || activeComic.author || 'Đang cập nhật'}
-                                                                                        </p>
-                                                                                    </div>
-                                                                                )}
                                     </div>
                                 )}
                             </div>
