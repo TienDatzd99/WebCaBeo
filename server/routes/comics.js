@@ -25,6 +25,57 @@ const enrichComic = (comic) => {
   };
 };
 
+const enrichComicListBatch = (comics = []) => {
+  if (!comics.length) return [];
+
+  const comicIds = comics.map((c) => c.id);
+  const placeholders = comicIds.map(() => '?').join(', ');
+
+  const genreRows = db.prepare(`
+    SELECT cg.comic_id, g.id, g.name
+    FROM comic_genres cg
+    JOIN genres g ON g.id = cg.genre_id
+    WHERE cg.comic_id IN (${placeholders})
+  `).all(...comicIds);
+
+  const ratingRows = db.prepare(`
+    SELECT comic_id, AVG(score) as avg, COUNT(*) as cnt
+    FROM ratings
+    WHERE comic_id IN (${placeholders})
+    GROUP BY comic_id
+  `).all(...comicIds);
+
+  const chapterRows = db.prepare(`
+    SELECT comic_id, COUNT(*) as cnt, MAX(number) as latestChapter
+    FROM chapters
+    WHERE comic_id IN (${placeholders})
+    GROUP BY comic_id
+  `).all(...comicIds);
+
+  const genresByComic = new Map();
+  for (const row of genreRows) {
+    if (!genresByComic.has(row.comic_id)) genresByComic.set(row.comic_id, []);
+    genresByComic.get(row.comic_id).push({ id: row.id, name: row.name });
+  }
+
+  const ratingByComic = new Map(ratingRows.map((r) => [r.comic_id, r]));
+  const chapterByComic = new Map(chapterRows.map((r) => [r.comic_id, r]));
+
+  return comics.map((comic) => {
+    const ratingRow = ratingByComic.get(comic.id);
+    const chapterRow = chapterByComic.get(comic.id);
+
+    return {
+      ...comic,
+      genres: genresByComic.get(comic.id) || [],
+      rating: ratingRow?.avg ? parseFloat(ratingRow.avg.toFixed(1)) : null,
+      ratingCount: ratingRow?.cnt || 0,
+      chapterCount: chapterRow?.cnt || 0,
+      latestChapter: chapterRow?.latestChapter ?? null,
+    };
+  });
+};
+
 // GET /api/comics  ?sort=views|favorited|newest  &genre=&search=&limit=&page=
 router.get('/', optionalAuth, (req, res) => {
   const { type, genre, search, sort, status, limit = 12, page = 1, offset } = req.query;
@@ -59,7 +110,7 @@ router.get('/', optionalAuth, (req, res) => {
   params.push(parseInt(limit), off);
 
   const comics = db.prepare(query).all(...params);
-  res.json({ comics: comics.map(enrichComic), total });
+  res.json({ comics: enrichComicListBatch(comics), total });
 });
 
 // GET /api/comics/featured
@@ -75,10 +126,10 @@ router.get('/featured', (req, res) => {
 
   if (!rows.length) {
     const fallback = db.prepare('SELECT * FROM comics ORDER BY views DESC, created_at DESC LIMIT 10').all();
-    return res.json({ comics: fallback.map(enrichComic) });
+    return res.json({ comics: enrichComicListBatch(fallback) });
   }
 
-  res.json({ comics: rows.map(enrichComic) });
+  res.json({ comics: enrichComicListBatch(rows) });
 });
 
 // GET /api/comics/:id

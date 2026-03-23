@@ -53,6 +53,8 @@ const db = openDatabase();
 // Pragma for performance
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
+db.pragma('synchronous = NORMAL');
+db.pragma('temp_store = MEMORY');
 
 // ── SCHEMA ──────────────────────────────────────────────────────────────────
 db.exec(`
@@ -144,6 +146,20 @@ db.exec(`
     is_active  INTEGER NOT NULL DEFAULT 1,
     created_at TEXT    DEFAULT (datetime('now'))
   );
+
+  CREATE INDEX IF NOT EXISTS idx_comics_created_at ON comics(created_at);
+  CREATE INDEX IF NOT EXISTS idx_comics_views ON comics(views DESC);
+  CREATE INDEX IF NOT EXISTS idx_comics_status ON comics(status);
+
+  CREATE INDEX IF NOT EXISTS idx_comic_genres_comic_id ON comic_genres(comic_id);
+  CREATE INDEX IF NOT EXISTS idx_comic_genres_genre_id ON comic_genres(genre_id);
+
+  CREATE INDEX IF NOT EXISTS idx_chapters_comic_id_number ON chapters(comic_id, number DESC);
+
+  CREATE INDEX IF NOT EXISTS idx_favorites_comic_id ON favorites(comic_id);
+  CREATE INDEX IF NOT EXISTS idx_ratings_comic_id ON ratings(comic_id);
+
+  CREATE INDEX IF NOT EXISTS idx_home_sliders_active_order ON home_sliders(is_active, sort_order, id);
 `);
 
 // Lightweight migration for existing databases created before new columns were added.

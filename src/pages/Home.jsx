@@ -26,15 +26,34 @@ export default function Home() {
     const [activeIdx, setActiveIdx] = useState(0);
 
     useEffect(() => {
-        Promise.all([
+        Promise.allSettled([
             getFeaturedComics(),
             getComics({ limit: 10, sort: 'views' }),
-            getComics({ limit: 20 }),
+            getComics({ limit: LATEST_LIMIT }),
         ])
             .then(([f, p, l]) => {
-                setFeatured((f.data.comics || f.data).slice(0, FEATURED_LIMIT));
-                setPopular((p.data.comics || p.data).slice(0, POPULAR_LIMIT));
-                setLatest((l.data.comics || l.data).slice(0, LATEST_LIMIT));
+                const featuredData = f.status === 'fulfilled'
+                    ? (f.value.data.comics || f.value.data)
+                    : [];
+                const popularData = p.status === 'fulfilled'
+                    ? (p.value.data.comics || p.value.data)
+                    : [];
+                const latestData = l.status === 'fulfilled'
+                    ? (l.value.data.comics || l.value.data)
+                    : [];
+
+                // Keep page usable even if one endpoint temporarily fails.
+                const safeFeatured = featuredData.slice(0, FEATURED_LIMIT);
+                const safePopular = popularData.slice(0, POPULAR_LIMIT);
+                const safeLatest = latestData.slice(0, LATEST_LIMIT);
+
+                setFeatured(safeFeatured.length ? safeFeatured : safePopular);
+                setPopular(safePopular);
+                setLatest(safeLatest);
+
+                if (!safeFeatured.length && !safePopular.length && !safeLatest.length) {
+                    console.error('Failed loading home comics: all home requests failed');
+                }
             })
             .catch((error) => {
                 console.error('Failed loading home comics:', error);
@@ -84,7 +103,7 @@ export default function Home() {
                                         <h1 className="font-bold mt-4 mb-4 drop-shadow-lg text-[1.5rem] font-sans">
                                             {activeDisplayTitle}
                                         </h1>
-                                        <p className="mb-6 text-lg drop-shadow text-sm whitespace-pre-line overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:6]">
+                                        <p className="mb-6 text-sm drop-shadow whitespace-pre-line overflow-hidden [display:-webkit-box] [-webkit-box-orient:vertical] [-webkit-line-clamp:6]">
                                             {activeComic.description || 'Theo dõi bộ truyện nổi bật đang được quan tâm nhất hôm nay.'}
                                         </p>
                                         <Link
