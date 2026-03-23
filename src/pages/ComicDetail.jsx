@@ -5,7 +5,7 @@ import {
   FiHeart, FiBookmark, FiLoader, FiEye,
   FiChevronLeft, FiChevronRight
 } from 'react-icons/fi';
-import { getComics, getComic, getComicChapters, invalidateComicCache, prefetchComicDetail } from '../api/comics.js';
+import { getComics, getComic, getComicChapters, invalidateComicCache, prefetchComicDetail, prefetchHomeData } from '../api/comics.js';
 import { toggleFavorite, rateComic } from '../api/auth.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import './ComicDetail.css';
@@ -48,6 +48,27 @@ export default function ComicDetail() {
       .finally(() => setLoading(false));
     window.scrollTo(0, 0);
   }, [id]);
+
+  useEffect(() => {
+    prefetchHomeData().catch(() => {});
+  }, []);
+
+  useEffect(() => {
+    const candidates = [comic?.home_cover_url, comic?.cover_url]
+      .filter(Boolean)
+      .slice(0, 2);
+
+    related.slice(0, 4).forEach((item) => {
+      if (item?.home_cover_url) candidates.push(item.home_cover_url);
+      else if (item?.cover_url) candidates.push(item.cover_url);
+    });
+
+    candidates.forEach((src) => {
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = src;
+    });
+  }, [comic, related]);
 
   const toggleFav = async () => {
     if (!user) return navigate('/login');

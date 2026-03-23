@@ -1,10 +1,10 @@
 import api from './index.js';
 
 const CACHE_TTL = {
-	list: 30_000,
-	featured: 30_000,
-	comic: 60_000,
-	chapters: 60_000,
+	list: 5 * 60_000,
+	featured: 5 * 60_000,
+	comic: 3 * 60_000,
+	chapters: 3 * 60_000,
 };
 
 const listCache = new Map();
@@ -122,6 +122,12 @@ export const getComicChapters = (id, options = {}) => {
 export const prefetchComicDetail = (id) => Promise.allSettled([
 	getComic(id),
 	getComicChapters(id),
+]);
+
+export const prefetchHomeData = () => Promise.allSettled([
+	getFeaturedComics(),
+	getComics({ limit: 10, sort: 'views' }),
+	getComics({ limit: 10 }),
 ]);
 
 export const invalidateComicCache = (id) => {
