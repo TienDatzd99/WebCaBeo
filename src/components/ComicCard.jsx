@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { prefetchComicDetail } from '../api/comics.js';
 import './ComicCard.css';
 
 const STATUS_META = {
@@ -14,9 +15,18 @@ export function CardSquare({ comic }) {
   const statusMeta = getStatusMeta(comic.status);
   const rating = Number(comic.rating ?? 0);
   const homeImage = comic.home_cover_url || comic.cover_url;
+  const handlePrefetch = () => {
+    prefetchComicDetail(comic.id).catch(() => {});
+  };
 
   return (
-    <Link to={`/comic/${comic.id}`} className="card-sq">
+    <Link
+      to={`/comic/${comic.id}`}
+      className="card-sq"
+      onMouseEnter={handlePrefetch}
+      onFocus={handlePrefetch}
+      onTouchStart={handlePrefetch}
+    >
       <div className="card-sq-img">
         <img src={homeImage} alt={comic.title} loading="lazy" />
         <span className={`card-badge ${statusMeta.cls}`}>{statusMeta.label}</span>
@@ -38,9 +48,18 @@ export function CardSquare({ comic }) {
 /* Portrait card — used in "Truyện mới nhất" grid */
 export function CardPortrait({ comic }) {
   const statusMeta = getStatusMeta(comic.status);
+  const handlePrefetch = () => {
+    prefetchComicDetail(comic.id).catch(() => {});
+  };
 
   return (
-    <Link to={`/comic/${comic.id}`} className="card-pt">
+    <Link
+      to={`/comic/${comic.id}`}
+      className="card-pt"
+      onMouseEnter={handlePrefetch}
+      onFocus={handlePrefetch}
+      onTouchStart={handlePrefetch}
+    >
       <div className="card-pt-img">
         <img src={comic.cover_url} alt={comic.title} loading="lazy" />
         <span className={`card-badge ${statusMeta.cls}`}>{statusMeta.label}</span>

@@ -6,23 +6,51 @@ import { Autoplay, Pagination, EffectCreative } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 
-import { getComics, getFeaturedComics } from '../api/comics.js';
+import { getComics, getFeaturedComics, prefetchComicDetail } from '../api/comics.js';
 import { CardSquare, CardPortrait } from '../components/ComicCard';
 import 'swiper/css/effect-creative';
 
 const FEATURED_LIMIT = 10;
 const POPULAR_LIMIT = 10;
 const LATEST_LIMIT = 10;
+const HOME_CACHE_KEY = 'home:payload:v1';
+const HOME_CACHE_MAX_AGE = 5 * 60 * 1000;
+
+function getInitialHomeCache() {
+    if (typeof window === 'undefined') {
+        return { featured: [], popular: [], latest: [], hasData: false };
+    }
+
+    try {
+        const raw = sessionStorage.getItem(HOME_CACHE_KEY);
+        if (!raw) return { featured: [], popular: [], latest: [], hasData: false };
+
+        const parsed = JSON.parse(raw);
+        const age = Date.now() - Number(parsed?.ts || 0);
+        if (age > HOME_CACHE_MAX_AGE) return { featured: [], popular: [], latest: [], hasData: false };
+
+        const featured = Array.isArray(parsed.featured) ? parsed.featured : [];
+        const popular = Array.isArray(parsed.popular) ? parsed.popular : [];
+        const latest = Array.isArray(parsed.latest) ? parsed.latest : [];
+        const hasData = featured.length > 0 || popular.length > 0 || latest.length > 0;
+
+        return { featured, popular, latest, hasData };
+    } catch {
+        return { featured: [], popular: [], latest: [], hasData: false };
+    }
+}
 
 export default function Home() {
+    const initialCache = getInitialHomeCache();
+
     const toTitleCase = (value = '') => String(value)
         .toLocaleLowerCase('vi-VN')
         .replace(/\p{L}+/gu, (word) => word.charAt(0).toLocaleUpperCase('vi-VN') + word.slice(1));
 
-    const [featured, setFeatured] = useState([]);
-    const [popular, setPopular] = useState([]);
-    const [latest, setLatest] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [featured, setFeatured] = useState(() => initialCache.featured);
+    const [popular, setPopular] = useState(() => initialCache.popular);
+    const [latest, setLatest] = useState(() => initialCache.latest);
+    const [loading, setLoading] = useState(() => !initialCache.hasData);
     const [activeIdx, setActiveIdx] = useState(0);
 
     useEffect(() => {
@@ -50,6 +78,13 @@ export default function Home() {
                 setFeatured(safeFeatured.length ? safeFeatured : safePopular);
                 setPopular(safePopular);
                 setLatest(safeLatest);
+
+                sessionStorage.setItem(HOME_CACHE_KEY, JSON.stringify({
+                    ts: Date.now(),
+                    featured: safeFeatured.length ? safeFeatured : safePopular,
+                    popular: safePopular,
+                    latest: safeLatest,
+                }));
 
                 if (!safeFeatured.length && !safePopular.length && !safeLatest.length) {
                     console.error('Failed loading home comics: all home requests failed');
@@ -176,6 +211,9 @@ export default function Home() {
                                                                 to={`/comic/${comic.id}`}
                                                                 className={`group relative block w-full aspect-[2/1] bg-transparent transition-all duration-700 ${isActive ? 'z-30 shadow-2xl' : (isNext ? 'z-20 shadow-lg' : 'z-10 shadow-md')
                                                                     }`}
+                                                                onMouseEnter={() => prefetchComicDetail(comic.id).catch(() => {})}
+                                                                onFocus={() => prefetchComicDetail(comic.id).catch(() => {})}
+                                                                onTouchStart={() => prefetchComicDetail(comic.id).catch(() => {})}
                                                             >
                                                                 <div className="absolute -inset-1.5 blur-[15px] rounded-[32px] transition-opacity duration-700" style={{ opacity: isActive ? 0.3 : 0.6 }} />
 

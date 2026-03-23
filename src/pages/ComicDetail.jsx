@@ -5,7 +5,7 @@ import {
   FiHeart, FiBookmark, FiLoader, FiEye,
   FiChevronLeft, FiChevronRight
 } from 'react-icons/fi';
-import { getComics, getComic, getComicChapters } from '../api/comics.js';
+import { getComics, getComic, getComicChapters, invalidateComicCache, prefetchComicDetail } from '../api/comics.js';
 import { toggleFavorite, rateComic } from '../api/auth.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import './ComicDetail.css';
@@ -53,6 +53,7 @@ export default function ComicDetail() {
     if (!user) return navigate('/login');
     const r = await toggleFavorite(id);
     setFaved(r.data.favorited);
+    invalidateComicCache(id);
   };
 
   const handleRate = async (score) => {
@@ -60,6 +61,7 @@ export default function ComicDetail() {
     const r = await rateComic(id, score);
     setMyRating(r.data.userRating);
     setComic(p => ({ ...p, rating: r.data.rating, ratingCount: r.data.ratingCount }));
+    invalidateComicCache(id);
   };
 
   const scrollRel = (dir) => {
@@ -294,7 +296,14 @@ export default function ComicDetail() {
             <button className="rel-arr left" onClick={() => scrollRel(-1)}><FiChevronLeft /></button>
             <div className="rel-scroller" ref={relRef}>
               {related.map(r => (
-                <Link to={`/comic/${r.id}`} key={r.id} className="rel-card">
+                <Link
+                  to={`/comic/${r.id}`}
+                  key={r.id}
+                  className="rel-card"
+                  onMouseEnter={() => prefetchComicDetail(r.id).catch(() => {})}
+                  onFocus={() => prefetchComicDetail(r.id).catch(() => {})}
+                  onTouchStart={() => prefetchComicDetail(r.id).catch(() => {})}
+                >
                   <div className="rel-img-wrap">
                     <img src={r.home_cover_url || r.cover_url} alt={r.title} className="rel-img" />
                     <span className={`rel-badge ${r.status === 'completed' ? 'rb-done' : 'rb-ongoing'}`}>
