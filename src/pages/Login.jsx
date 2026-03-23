@@ -66,9 +66,7 @@ const Login = () => {
             />
           </div>
 
-          <div className="demo-hint">
-            <span>Demo: <strong>admin@camap.com</strong> / <strong>admin1234</strong></span>
-          </div>
+         
 
           <button type="submit" className="auth-btn" disabled={loading}>
             <FiLogIn /> {loading ? 'Đang đăng nhập...' : 'Đăng Nhập'}
