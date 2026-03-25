@@ -1,8 +1,11 @@
 import axios from 'axios';
 
+const rawApiUrl = String(import.meta.env.VITE_API_URL || '').trim();
+const isPlaceholderUrl = /your-render-service\.onrender\.com/i.test(rawApiUrl);
+
 const API_BASE_URL = import.meta.env.DEV
-  ? (import.meta.env.VITE_API_URL || 'http://localhost:3001/api')
-  : (import.meta.env.VITE_API_URL || '/api');
+  ? (rawApiUrl || 'http://localhost:3001/api')
+  : (!rawApiUrl || isPlaceholderUrl ? '/api' : rawApiUrl);
 
 console.log('[API] DEV:', import.meta.env.DEV, 'BASE_URL:', API_BASE_URL);
 
