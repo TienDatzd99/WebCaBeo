@@ -87,6 +87,26 @@ const enrichComicListBatch = (comics = []) => {
   });
 };
 
+const toHomeCardComic = (comic, { includeDescription = false } = {}) => {
+  if (!comic) return null;
+
+  return {
+    id: comic.id,
+    title: comic.title,
+    author: comic.author,
+    translator: comic.translator,
+    cover_url: comic.cover_url,
+    home_cover_url: comic.home_cover_url,
+    status: comic.status,
+    views: comic.views,
+    rating: comic.rating,
+    ratingCount: comic.ratingCount,
+    chapterCount: comic.chapterCount,
+    latestChapter: comic.latestChapter,
+    ...(includeDescription ? { description: comic.description } : {}),
+  };
+};
+
 // GET /api/comics/home - aggregate payload for homepage with a single request
 router.get('/home', (req, res) => {
   try {
@@ -102,15 +122,28 @@ router.get('/home', (req, res) => {
     `).all();
 
     const featuredFallback = db.prepare('SELECT * FROM comics ORDER BY views DESC, created_at DESC LIMIT 10').all();
-    const featured = enrichComicListBatch(featuredRows.length ? featuredRows : featuredFallback);
+    const featuredRaw = featuredRows.length ? featuredRows : featuredFallback;
+    const popularRaw = db.prepare('SELECT * FROM comics ORDER BY views DESC, created_at DESC LIMIT 10').all();
+    const latestRaw = db.prepare('SELECT * FROM comics ORDER BY created_at DESC LIMIT 10').all();
 
-    const popular = enrichComicListBatch(
-      db.prepare('SELECT * FROM comics ORDER BY views DESC, created_at DESC LIMIT 10').all()
+    const uniqueMap = new Map();
+    [...featuredRaw, ...popularRaw, ...latestRaw].forEach((comic) => {
+      if (!uniqueMap.has(comic.id)) uniqueMap.set(comic.id, comic);
+    });
+
+    const enrichedById = new Map(
+      enrichComicListBatch([...uniqueMap.values()]).map((comic) => [comic.id, comic])
     );
 
-    const latest = enrichComicListBatch(
-      db.prepare('SELECT * FROM comics ORDER BY created_at DESC LIMIT 10').all()
-    );
+    const featured = featuredRaw
+      .map((comic) => toHomeCardComic(enrichedById.get(comic.id), { includeDescription: true }))
+      .filter(Boolean);
+    const popular = popularRaw
+      .map((comic) => toHomeCardComic(enrichedById.get(comic.id)))
+      .filter(Boolean);
+    const latest = latestRaw
+      .map((comic) => toHomeCardComic(enrichedById.get(comic.id)))
+      .filter(Boolean);
 
     res.json({ featured, popular, latest });
   } catch (error) {
