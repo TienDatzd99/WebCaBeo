@@ -112,8 +112,22 @@ router.get('/home', (req, res) => {
   try {
     setCacheHeaders(req, res, { publicMaxAge: 30, sMaxAge: 120 });
 
+    const HOME_COMIC_FIELDS = `
+      c.id,
+      c.title,
+      c.author,
+      c.translator,
+      c.cover_url,
+      c.home_cover_url,
+      c.status,
+      c.views,
+      c.created_at
+    `;
+
     const featuredRows = db.prepare(`
-      SELECT c.*
+      SELECT
+        ${HOME_COMIC_FIELDS},
+        SUBSTR(IFNULL(c.description, ''), 1, 280) as description
       FROM home_sliders hs
       JOIN comics c ON c.id = hs.comic_id
       WHERE hs.is_active = 1
@@ -121,10 +135,27 @@ router.get('/home', (req, res) => {
       LIMIT 10
     `).all();
 
-    const featuredFallback = db.prepare('SELECT * FROM comics ORDER BY views DESC, created_at DESC LIMIT 10').all();
+    const featuredFallback = db.prepare(`
+      SELECT
+        ${HOME_COMIC_FIELDS},
+        SUBSTR(IFNULL(c.description, ''), 1, 280) as description
+      FROM comics c
+      ORDER BY c.views DESC, c.created_at DESC
+      LIMIT 10
+    `).all();
     const featuredRaw = featuredRows.length ? featuredRows : featuredFallback;
-    const popularRaw = db.prepare('SELECT * FROM comics ORDER BY views DESC, created_at DESC LIMIT 10').all();
-    const latestRaw = db.prepare('SELECT * FROM comics ORDER BY created_at DESC LIMIT 10').all();
+    const popularRaw = db.prepare(`
+      SELECT ${HOME_COMIC_FIELDS}
+      FROM comics c
+      ORDER BY c.views DESC, c.created_at DESC
+      LIMIT 10
+    `).all();
+    const latestRaw = db.prepare(`
+      SELECT ${HOME_COMIC_FIELDS}
+      FROM comics c
+      ORDER BY c.created_at DESC
+      LIMIT 10
+    `).all();
 
     const uniqueMap = new Map();
     [...featuredRaw, ...popularRaw, ...latestRaw].forEach((comic) => {
