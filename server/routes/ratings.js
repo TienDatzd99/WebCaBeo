@@ -4,6 +4,11 @@ import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
+const setPublicCache = (res, { maxAge = 15, sMaxAge = 60 } = {}) => {
+  const swr = Math.max(sMaxAge * 2, 60);
+  res.set('Cache-Control', `public, max-age=${maxAge}, s-maxage=${sMaxAge}, stale-while-revalidate=${swr}`);
+};
+
 const formatReview = (row) => ({
   id: row.id,
   userId: row.user_id,
@@ -30,6 +35,8 @@ router.post('/:comicId', authenticateToken, (req, res) => {
 
 // GET /api/ratings/:comicId/reviews
 router.get('/:comicId/reviews', (req, res) => {
+  setPublicCache(res, { maxAge: 15, sMaxAge: 90 });
+
   const rows = db.prepare(`
     SELECT rv.id, rv.user_id,
            COALESCE(NULLIF(rv.display_name, ''), u.username, 'Anonymous') as name,

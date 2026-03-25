@@ -18,6 +18,9 @@ import adminRouter     from './routes/admin.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3001;
+const PERF_LOG_ENABLED = process.env.PERF_LOG !== '0';
+const PERF_LOG_ALL = process.env.PERF_LOG_ALL === '1';
+const PERF_SLOW_MS = Number(process.env.PERF_SLOW_MS || 700);
 const DEFAULT_ORIGINS = ['http://localhost:5173'];
 const FRONTEND_ORIGINS = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',').map((o) => o.trim()).filter(Boolean)
@@ -27,6 +30,21 @@ const FRONTEND_ORIGINS = process.env.FRONTEND_URL
 app.use(cors({ origin: FRONTEND_ORIGINS, credentials: true }));
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ extended: true, limit: '15mb' }));
+
+app.use('/api', (req, res, next) => {
+  if (!PERF_LOG_ENABLED) return next();
+
+  const start = process.hrtime.bigint();
+  res.on('finish', () => {
+    const elapsedMs = Number(process.hrtime.bigint() - start) / 1e6;
+    if (!PERF_LOG_ALL && elapsedMs < PERF_SLOW_MS) return;
+
+    console.log(`[perf] ${req.method} ${req.originalUrl} -> ${res.statusCode} in ${elapsedMs.toFixed(1)}ms`);
+  });
+
+  return next();
+});
+
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // ── Routes ─────────────────────────────────────────────────────────────────

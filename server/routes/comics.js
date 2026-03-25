@@ -4,6 +4,17 @@ import { optionalAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 
+const setCacheHeaders = (req, res, { publicMaxAge = 30, sMaxAge = 90 } = {}) => {
+  const hasAuth = Boolean(req.headers.authorization) || Boolean(req.user);
+  if (hasAuth) {
+    res.set('Cache-Control', 'private, no-store');
+    return;
+  }
+
+  const swr = Math.max(sMaxAge * 2, 60);
+  res.set('Cache-Control', `public, max-age=${publicMaxAge}, s-maxage=${sMaxAge}, stale-while-revalidate=${swr}`);
+};
+
 // Helper to attach genres and average rating to a comic
 const enrichComic = (comic) => {
   if (!comic) return null;
@@ -78,6 +89,8 @@ const enrichComicListBatch = (comics = []) => {
 
 // GET /api/comics  ?sort=views|favorited|newest  &genre=&search=&limit=&page=
 router.get('/', optionalAuth, (req, res) => {
+  setCacheHeaders(req, res, { publicMaxAge: 20, sMaxAge: 60 });
+
   const { type, genre, search, sort, status, limit = 12, page = 1, offset } = req.query;
   const off = offset !== undefined ? parseInt(offset) : (parseInt(page) - 1) * parseInt(limit);
 
@@ -115,6 +128,8 @@ router.get('/', optionalAuth, (req, res) => {
 
 // GET /api/comics/featured
 router.get('/featured', (req, res) => {
+  setCacheHeaders(req, res, { publicMaxAge: 30, sMaxAge: 120 });
+
   const rows = db.prepare(`
     SELECT c.*
     FROM home_sliders hs
@@ -134,6 +149,8 @@ router.get('/featured', (req, res) => {
 
 // GET /api/comics/:id
 router.get('/:id', optionalAuth, (req, res) => {
+  setCacheHeaders(req, res, { publicMaxAge: 10, sMaxAge: 20 });
+
   const comic = db.prepare('SELECT * FROM comics WHERE id = ?').get(req.params.id);
   if (!comic) return res.status(404).json({ error: 'Comic not found' });
 
@@ -155,6 +172,8 @@ router.get('/:id', optionalAuth, (req, res) => {
 
 // GET /api/comics/:id/chapters
 router.get('/:id/chapters', (req, res) => {
+  setCacheHeaders(req, res, { publicMaxAge: 30, sMaxAge: 120 });
+
   const chapters = db.prepare(`
     SELECT id, comic_id, number, title, views, created_at
     FROM chapters WHERE comic_id = ? ORDER BY number DESC

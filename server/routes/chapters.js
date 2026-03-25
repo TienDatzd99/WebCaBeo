@@ -4,8 +4,15 @@ import { authenticateToken } from '../middleware/auth.js';
 
 const router = express.Router();
 
+const setPublicCache = (res, { maxAge = 10, sMaxAge = 45 } = {}) => {
+  const swr = Math.max(sMaxAge * 2, 60);
+  res.set('Cache-Control', `public, max-age=${maxAge}, s-maxage=${sMaxAge}, stale-while-revalidate=${swr}`);
+};
+
 // GET /api/chapters/:id  – returns chapter detail + all pages
 router.get('/:id', (req, res) => {
+  setPublicCache(res, { maxAge: 10, sMaxAge: 60 });
+
   const chapter = db.prepare(`
     SELECT ch.*, c.title as comic_title, c.id as comic_id
     FROM chapters ch

@@ -73,49 +73,53 @@ const fetchWithCache = ({
 
 export const getComics = (params = {}, options = {}) => {
 	const key = makeParamKey(params);
+	const requestConfig = options.requestConfig || {};
 	return fetchWithCache({
 		cache: listCache,
 		inFlight: inFlightList,
 		key,
 		ttl: CACHE_TTL.list,
 		force: options.force,
-		fetcher: () => api.get('/comics', { params }),
+		fetcher: () => api.get('/comics', { params, ...requestConfig }),
 	});
 };
 
 export const getFeaturedComics = (options = {}) => {
 	const key = 'featured';
+	const requestConfig = options.requestConfig || {};
 	return fetchWithCache({
 		cache: featuredCache,
 		inFlight: inFlightFeatured,
 		key,
 		ttl: CACHE_TTL.featured,
 		force: options.force,
-		fetcher: () => api.get('/comics/featured'),
+		fetcher: () => api.get('/comics/featured', requestConfig),
 	});
 };
 
 export const getComic = (id, options = {}) => {
 	const key = String(id);
+	const requestConfig = options.requestConfig || {};
 	return fetchWithCache({
 		cache: comicCache,
 		inFlight: inFlightComic,
 		key,
 		ttl: CACHE_TTL.comic,
 		force: options.force,
-		fetcher: () => api.get(`/comics/${id}`),
+		fetcher: () => api.get(`/comics/${id}`, requestConfig),
 	});
 };
 
 export const getComicChapters = (id, options = {}) => {
 	const key = String(id);
+	const requestConfig = options.requestConfig || {};
 	return fetchWithCache({
 		cache: chaptersCache,
 		inFlight: inFlightChapters,
 		key,
 		ttl: CACHE_TTL.chapters,
 		force: options.force,
-		fetcher: () => api.get(`/comics/${id}/chapters`),
+		fetcher: () => api.get(`/comics/${id}/chapters`, requestConfig),
 	});
 };
 
