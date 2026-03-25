@@ -60,6 +60,8 @@ export default function Home() {
             getComics({ limit: LATEST_LIMIT }),
         ])
             .then(([f, p, l]) => {
+                console.log('[Home] API responses:', { f, p, l });
+
                 const featuredData = f.status === 'fulfilled'
                     ? (f.value.data.comics || f.value.data)
                     : [];
@@ -74,6 +76,8 @@ export default function Home() {
                 const safeFeatured = Array.isArray(featuredData) ? featuredData.slice(0, FEATURED_LIMIT) : [];
                 const safePopular = Array.isArray(popularData) ? popularData.slice(0, POPULAR_LIMIT) : [];
                 const safeLatest = Array.isArray(latestData) ? latestData.slice(0, LATEST_LIMIT) : [];
+
+                console.log('[Home] Safe data:', { safeFeatured: safeFeatured.length, safePopular: safePopular.length, safeLatest: safeLatest.length });
 
                 setFeatured(safeFeatured.length ? safeFeatured : safePopular);
                 setPopular(safePopular);

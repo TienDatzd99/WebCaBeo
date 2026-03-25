@@ -67,6 +67,16 @@ app.get('/api/health', (_, res) => {
     res.status(500).json({ status: 'error', error: err.message });
   }
 });
+
+// Simple test endpoint
+app.get('/api/test', (req, res) => {
+  res.json({ 
+    message: 'API is working!',
+    nodeEnv: process.env.NODE_ENV,
+    frontendUrl: process.env.FRONTEND_URL,
+    path: req.path
+  });
+});
 // ── Serve React App ───────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, '../dist')));
 
