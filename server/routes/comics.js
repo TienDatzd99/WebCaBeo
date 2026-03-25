@@ -151,22 +151,22 @@ router.get('/', optionalAuth, (req, res) => {
     }
     const conditions = [];
     if (genre)  { conditions.push('g.name = ?'); params.push(genre); }
-  if (search) {
-    conditions.push("(c.title LIKE ? OR c.author LIKE ? OR IFNULL(c.translator, '') LIKE ?)");
-    params.push(`%${search}%`, `%${search}%`, `%${search}%`);
-  }
-  if (status) { conditions.push('c.status = ?'); params.push(status); }
-  if (conditions.length) query += ` WHERE ${conditions.join(' AND ')}`;
+    if (search) {
+      conditions.push("(c.title LIKE ? OR c.author LIKE ? OR IFNULL(c.translator, '') LIKE ?)");
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+    }
+    if (status) { conditions.push('c.status = ?'); params.push(status); }
+    if (conditions.length) query += ` WHERE ${conditions.join(' AND ')}`;
 
-  // Count query (same conditions, no limit)
-  const countQuery = query.replace('SELECT DISTINCT c.*', 'SELECT COUNT(DISTINCT c.id) as cnt');
-  const total = db.prepare(countQuery).get(...params).cnt;
+    // Count query (same conditions, no limit)
+    const countQuery = query.replace('SELECT DISTINCT c.*', 'SELECT COUNT(DISTINCT c.id) as cnt');
+    const total = db.prepare(countQuery).get(...params).cnt;
 
-  query += ` ORDER BY ${orderBy} LIMIT ? OFFSET ?`;
-  params.push(parseInt(limit), off);
+    query += ` ORDER BY ${orderBy} LIMIT ? OFFSET ?`;
+    params.push(parseInt(limit), off);
 
-  const comics = db.prepare(query).all(...params);
-  res.json({ comics: enrichComicListBatch(comics), total });
+    const comics = db.prepare(query).all(...params);
+    res.json({ comics: enrichComicListBatch(comics), total });
   } catch (error) {
     console.error('[/api/comics] Error:', error.message);
     res.status(500).json({ error: 'Lỗi server: ' + error.message });
