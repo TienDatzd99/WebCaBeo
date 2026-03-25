@@ -87,6 +87,38 @@ const enrichComicListBatch = (comics = []) => {
   });
 };
 
+// GET /api/comics/home - aggregate payload for homepage with a single request
+router.get('/home', (req, res) => {
+  try {
+    setCacheHeaders(req, res, { publicMaxAge: 30, sMaxAge: 120 });
+
+    const featuredRows = db.prepare(`
+      SELECT c.*
+      FROM home_sliders hs
+      JOIN comics c ON c.id = hs.comic_id
+      WHERE hs.is_active = 1
+      ORDER BY hs.sort_order ASC, hs.id ASC
+      LIMIT 10
+    `).all();
+
+    const featuredFallback = db.prepare('SELECT * FROM comics ORDER BY views DESC, created_at DESC LIMIT 10').all();
+    const featured = enrichComicListBatch(featuredRows.length ? featuredRows : featuredFallback);
+
+    const popular = enrichComicListBatch(
+      db.prepare('SELECT * FROM comics ORDER BY views DESC, created_at DESC LIMIT 10').all()
+    );
+
+    const latest = enrichComicListBatch(
+      db.prepare('SELECT * FROM comics ORDER BY created_at DESC LIMIT 10').all()
+    );
+
+    res.json({ featured, popular, latest });
+  } catch (error) {
+    console.error('[/api/comics/home] Error:', error.message);
+    res.status(500).json({ error: 'Lỗi server: ' + error.message });
+  }
+});
+
 // GET /api/comics/featured
 router.get('/featured', (req, res) => {
   try {

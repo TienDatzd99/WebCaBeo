@@ -3,6 +3,7 @@ import api from './index.js';
 const CACHE_TTL = {
 	list: 5 * 60_000,
 	featured: 5 * 60_000,
+	home: 2 * 60_000,
 	comic: 3 * 60_000,
 	chapters: 3 * 60_000,
 };
@@ -11,11 +12,13 @@ const listCache = new Map();
 const featuredCache = new Map();
 const comicCache = new Map();
 const chaptersCache = new Map();
+const homeCache = new Map();
 
 const inFlightList = new Map();
 const inFlightFeatured = new Map();
 const inFlightComic = new Map();
 const inFlightChapters = new Map();
+const inFlightHome = new Map();
 
 const toCachedResponse = (data) => ({ data, fromCache: true });
 
@@ -123,16 +126,25 @@ export const getComicChapters = (id, options = {}) => {
 	});
 };
 
+export const getHomePayload = (options = {}) => {
+	const key = 'home';
+	const requestConfig = options.requestConfig || {};
+	return fetchWithCache({
+		cache: homeCache,
+		inFlight: inFlightHome,
+		key,
+		ttl: CACHE_TTL.home,
+		force: options.force,
+		fetcher: () => api.get('/comics/home', requestConfig),
+	});
+};
+
 export const prefetchComicDetail = (id) => Promise.allSettled([
 	getComic(id),
 	getComicChapters(id),
 ]);
 
-export const prefetchHomeData = () => Promise.allSettled([
-	getFeaturedComics(),
-	getComics({ limit: 10, sort: 'views' }),
-	getComics({ limit: 10 }),
-]);
+export const prefetchHomeData = () => Promise.allSettled([getHomePayload()]);
 
 export const invalidateComicCache = (id) => {
 	if (id !== undefined && id !== null) {
@@ -144,6 +156,7 @@ export const invalidateComicCache = (id) => {
 
 	listCache.clear();
 	featuredCache.clear();
+	homeCache.clear();
 	comicCache.clear();
 	chaptersCache.clear();
 };

@@ -6,7 +6,7 @@ import { Autoplay, Pagination, EffectCreative } from 'swiper/modules';
 import 'swiper/css';
 import 'swiper/css/pagination';
 
-import { getComics, getFeaturedComics, prefetchComicDetail } from '../api/comics.js';
+import { getHomePayload, prefetchComicDetail } from '../api/comics.js';
 import { CardSquare, CardPortrait } from '../components/ComicCard';
 import 'swiper/css/effect-creative';
 
@@ -54,30 +54,17 @@ export default function Home() {
     const [activeIdx, setActiveIdx] = useState(0);
 
     useEffect(() => {
-        Promise.allSettled([
-            getFeaturedComics(),
-            getComics({ limit: 10, sort: 'views' }),
-            getComics({ limit: LATEST_LIMIT }),
-        ])
-            .then(([f, p, l]) => {
-                console.log('[Home] API responses:', { f, p, l });
-
-                const featuredData = f.status === 'fulfilled'
-                    ? (f.value.data.comics || f.value.data)
-                    : [];
-                const popularData = p.status === 'fulfilled'
-                    ? (p.value.data.comics || p.value.data)
-                    : [];
-                const latestData = l.status === 'fulfilled'
-                    ? (l.value.data.comics || l.value.data)
-                    : [];
+        getHomePayload()
+            .then((response) => {
+                const data = response.data || {};
+                const featuredData = Array.isArray(data.featured) ? data.featured : [];
+                const popularData = Array.isArray(data.popular) ? data.popular : [];
+                const latestData = Array.isArray(data.latest) ? data.latest : [];
 
                 // Keep page usable even if one endpoint temporarily fails.
                 const safeFeatured = Array.isArray(featuredData) ? featuredData.slice(0, FEATURED_LIMIT) : [];
                 const safePopular = Array.isArray(popularData) ? popularData.slice(0, POPULAR_LIMIT) : [];
                 const safeLatest = Array.isArray(latestData) ? latestData.slice(0, LATEST_LIMIT) : [];
-
-                console.log('[Home] Safe data:', { safeFeatured: safeFeatured.length, safePopular: safePopular.length, safeLatest: safeLatest.length });
 
                 setFeatured(safeFeatured.length ? safeFeatured : safePopular);
                 setPopular(safePopular);
@@ -91,7 +78,7 @@ export default function Home() {
                 }));
 
                 if (!safeFeatured.length && !safePopular.length && !safeLatest.length) {
-                    console.error('Failed loading home comics: all home requests failed');
+                    console.error('Failed loading home comics: empty home payload');
                 }
             })
             .catch((error) => {
@@ -230,6 +217,9 @@ export default function Home() {
                                                                                 src={homeCover}
                                                                                 alt={displayTitle}
                                                                                 className="absolute top-0 left-0 w-full h-full object-cover"
+                                                                                loading={isActive ? 'eager' : 'lazy'}
+                                                                                decoding="async"
+                                                                                fetchPriority={isActive ? 'high' : 'auto'}
                                                                                 style={{
                                                                                     objectPosition: 'left top',
                                                                                     transform: `scale(${imageScale})`,
