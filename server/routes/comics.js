@@ -87,6 +87,48 @@ const enrichComicListBatch = (comics = []) => {
   });
 };
 
+// GET /api/comics/featured
+router.get('/featured', (req, res) => {
+  try {
+    setCacheHeaders(req, res, { publicMaxAge: 30, sMaxAge: 120 });
+
+    const rows = db.prepare(`
+      SELECT c.*
+      FROM home_sliders hs
+      JOIN comics c ON c.id = hs.comic_id
+      WHERE hs.is_active = 1
+      ORDER BY hs.sort_order ASC, hs.id ASC
+      LIMIT 10
+    `).all();
+
+    if (!rows.length) {
+      const fallback = db.prepare('SELECT * FROM comics ORDER BY views DESC, created_at DESC LIMIT 10').all();
+      return res.json({ comics: enrichComicListBatch(fallback) });
+    }
+
+    res.json({ comics: enrichComicListBatch(rows) });
+  } catch (error) {
+    console.error('[/api/comics/featured] Error:', error.message);
+    res.status(500).json({ error: 'Lỗi server: ' + error.message });
+  }
+});
+
+// GET /api/comics/:id/chapters
+router.get('/:id/chapters', (req, res) => {
+  try {
+    setCacheHeaders(req, res, { publicMaxAge: 30, sMaxAge: 120 });
+
+    const chapters = db.prepare(`
+      SELECT id, comic_id, number, title, views, created_at
+      FROM chapters WHERE comic_id = ? ORDER BY number DESC
+    `).all(req.params.id);
+    res.json(chapters);
+  } catch (error) {
+    console.error('[/api/comics/:id/chapters] Error:', error.message);
+    res.status(500).json({ error: 'Lỗi server: ' + error.message });
+  }
+});
+
 // GET /api/comics  ?sort=views|favorited|newest  &genre=&search=&limit=&page=
 router.get('/', optionalAuth, (req, res) => {
   try {
@@ -131,59 +173,32 @@ router.get('/', optionalAuth, (req, res) => {
   }
 });
 
-// GET /api/comics/featured
-router.get('/featured', (req, res) => {
-  setCacheHeaders(req, res, { publicMaxAge: 30, sMaxAge: 120 });
-
-  const rows = db.prepare(`
-    SELECT c.*
-    FROM home_sliders hs
-    JOIN comics c ON c.id = hs.comic_id
-    WHERE hs.is_active = 1
-    ORDER BY hs.sort_order ASC, hs.id ASC
-    LIMIT 10
-  `).all();
-
-  if (!rows.length) {
-    const fallback = db.prepare('SELECT * FROM comics ORDER BY views DESC, created_at DESC LIMIT 10').all();
-    return res.json({ comics: enrichComicListBatch(fallback) });
-  }
-
-  res.json({ comics: enrichComicListBatch(rows) });
-});
-
 // GET /api/comics/:id
 router.get('/:id', optionalAuth, (req, res) => {
-  setCacheHeaders(req, res, { publicMaxAge: 10, sMaxAge: 20 });
+  try {
+    setCacheHeaders(req, res, { publicMaxAge: 10, sMaxAge: 20 });
 
-  const comic = db.prepare('SELECT * FROM comics WHERE id = ?').get(req.params.id);
-  if (!comic) return res.status(404).json({ error: 'Comic not found' });
+    const comic = db.prepare('SELECT * FROM comics WHERE id = ?').get(req.params.id);
+    if (!comic) return res.status(404).json({ error: 'Comic not found' });
 
-  // Increment views
-  db.prepare('UPDATE comics SET views = views + 1 WHERE id = ?').run(comic.id);
+    // Increment views
+    db.prepare('UPDATE comics SET views = views + 1 WHERE id = ?').run(comic.id);
 
-  const enriched = enrichComic(comic);
+    const enriched = enrichComic(comic);
 
-  let isFavorited = false;
-  let userRating = null;
-  if (req.user) {
-    isFavorited = !!db.prepare('SELECT 1 FROM favorites WHERE user_id = ? AND comic_id = ?').get(req.user.id, comic.id);
-    const ur = db.prepare('SELECT score FROM ratings WHERE user_id = ? AND comic_id = ?').get(req.user.id, comic.id);
-    userRating = ur ? ur.score : null;
+    let isFavorited = false;
+    let userRating = null;
+    if (req.user) {
+      isFavorited = !!db.prepare('SELECT 1 FROM favorites WHERE user_id = ? AND comic_id = ?').get(req.user.id, comic.id);
+      const ur = db.prepare('SELECT score FROM ratings WHERE user_id = ? AND comic_id = ?').get(req.user.id, comic.id);
+      userRating = ur ? ur.score : null;
+    }
+
+    res.json({ ...enriched, isFavorited, userRating });
+  } catch (error) {
+    console.error('[/api/comics/:id] Error:', error.message);
+    res.status(500).json({ error: 'Lỗi server: ' + error.message });
   }
-
-  res.json({ ...enriched, isFavorited, userRating });
-});
-
-// GET /api/comics/:id/chapters
-router.get('/:id/chapters', (req, res) => {
-  setCacheHeaders(req, res, { publicMaxAge: 30, sMaxAge: 120 });
-
-  const chapters = db.prepare(`
-    SELECT id, comic_id, number, title, views, created_at
-    FROM chapters WHERE comic_id = ? ORDER BY number DESC
-  `).all(req.params.id);
-  res.json(chapters);
 });
 
 export default router;
