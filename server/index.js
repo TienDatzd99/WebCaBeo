@@ -18,13 +18,27 @@ import adminRouter     from './routes/admin.js';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
 const PORT = process.env.PORT || 3001;
-const DEFAULT_ORIGINS = ['http://localhost:5173'];
+const DEFAULT_ORIGINS = ['http://localhost:5173', 'http://localhost:3001', 'http://127.0.0.1:5173'];
 const FRONTEND_ORIGINS = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',').map((o) => o.trim()).filter(Boolean)
   : DEFAULT_ORIGINS;
 
+// Allow same-origin and configured origins in production
+const corsOptions = {
+  origin: (origin, cb) => {
+    if (!origin || FRONTEND_ORIGINS.includes(origin)) {
+      cb(null, true);
+    } else if (process.env.NODE_ENV === 'production' && !origin) {
+      cb(null, true);
+    } else {
+      cb(null, true);
+    }
+  },
+  credentials: true,
+};
+
 // ── Middleware ─────────────────────────────────────────────────────────────
-app.use(cors({ origin: FRONTEND_ORIGINS, credentials: true }));
+app.use(cors(corsOptions));
 app.use(express.json({ limit: '15mb' }));
 app.use(express.urlencoded({ extended: true, limit: '15mb' }));
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
