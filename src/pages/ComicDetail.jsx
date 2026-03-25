@@ -39,52 +39,20 @@ export default function ComicDetail() {
   const [savingReview, setSavingReview] = useState(false);
 
   useEffect(() => {
-    let isActive = true;
     setLoading(true);
-    setRelated([]);
-    setReviews([]);
-    setReviewErr('');
-
-    const loadCritical = async () => {
-      try {
-        const [c, ch] = await Promise.all([getComic(id), getComicChapters(id)]);
-        if (!isActive) return;
-
+    Promise.all([getComic(id), getComicChapters(id), getComics({ limit: 10 }), getComicReviews(id)])
+      .then(([c, ch, rel, rv]) => {
         setComic(c.data);
         setFaved(c.data.isFavorited || false);
         setMyRating(c.data.userRating || 0);
         setChapters(ch.data);
-      } catch {
-        // keep existing fallback behavior
-      } finally {
-        if (isActive) setLoading(false);
-      }
-    };
-
-    const loadSupplemental = async () => {
-      const [rel, rv] = await Promise.allSettled([
-        getComics({ limit: 10 }),
-        getComicReviews(id),
-      ]);
-
-      if (!isActive) return;
-
-      if (rel.status === 'fulfilled') {
-        setRelated((rel.value.data.comics || rel.value.data).filter(x => String(x.id) !== String(id)));
-      }
-
-      if (rv.status === 'fulfilled') {
-        setReviews(rv.value.data.reviews || []);
-      }
-    };
-
-    loadCritical();
-    loadSupplemental();
+        setRelated((rel.data.comics || rel.data).filter(x => String(x.id) !== String(id)));
+        setReviews(rv.data.reviews || []);
+        setReviewErr('');
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
     window.scrollTo(0, 0);
-
-    return () => {
-      isActive = false;
-    };
   }, [id]);
 
   useEffect(() => {
