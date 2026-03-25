@@ -196,7 +196,7 @@ if (!chapterCols.some((c) => c.name === 'content')) {
 const alreadySeeded = db.prepare('SELECT COUNT(*) as cnt FROM comics').get().cnt > 0;
 
 if (!alreadySeeded) {
-  console.log('Seeding database...');
+  console.log('[db] Database is empty, seeding...');
 
   // Genres
   const genres = [
@@ -260,7 +260,9 @@ if (!alreadySeeded) {
   });
 
   seedAll();
-  console.log('Seeding complete.');
+  console.log('[db] Seeding complete. Comics count:', db.prepare('SELECT COUNT(*) as cnt FROM comics').get().cnt);
+} else {
+  console.log('[db] Database already seeded. Comics count:', db.prepare('SELECT COUNT(*) as cnt FROM comics').get().cnt);
 }
 
 export default db;

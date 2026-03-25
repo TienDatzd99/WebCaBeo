@@ -89,25 +89,26 @@ const enrichComicListBatch = (comics = []) => {
 
 // GET /api/comics  ?sort=views|favorited|newest  &genre=&search=&limit=&page=
 router.get('/', optionalAuth, (req, res) => {
-  setCacheHeaders(req, res, { publicMaxAge: 20, sMaxAge: 60 });
+  try {
+    setCacheHeaders(req, res, { publicMaxAge: 20, sMaxAge: 60 });
 
-  const { type, genre, search, sort, status, limit = 12, page = 1, offset } = req.query;
-  const off = offset !== undefined ? parseInt(offset) : (parseInt(page) - 1) * parseInt(limit);
+    const { type, genre, search, sort, status, limit = 12, page = 1, offset } = req.query;
+    const off = offset !== undefined ? parseInt(offset) : (parseInt(page) - 1) * parseInt(limit);
 
-  // Determine order
-  let orderBy = 'c.created_at DESC';
-  if (type === 'popular' || type === 'featured' || sort === 'views') orderBy = 'c.views DESC';
-  if (sort === 'favorited') orderBy = '(SELECT COUNT(*) FROM favorites f WHERE f.comic_id = c.id) DESC';
-  if (sort === 'newest')    orderBy = 'c.created_at DESC';
+    // Determine order
+    let orderBy = 'c.created_at DESC';
+    if (type === 'popular' || type === 'featured' || sort === 'views') orderBy = 'c.views DESC';
+    if (sort === 'favorited') orderBy = '(SELECT COUNT(*) FROM favorites f WHERE f.comic_id = c.id) DESC';
+    if (sort === 'newest')    orderBy = 'c.created_at DESC';
 
-  let query = `SELECT DISTINCT c.* FROM comics c`;
-  const params = [];
+    let query = `SELECT DISTINCT c.* FROM comics c`;
+    const params = [];
 
-  if (genre) {
-    query += ` JOIN comic_genres cg ON c.id = cg.comic_id JOIN genres g ON g.id = cg.genre_id`;
-  }
-  const conditions = [];
-  if (genre)  { conditions.push('g.name = ?'); params.push(genre); }
+    if (genre) {
+      query += ` JOIN comic_genres cg ON c.id = cg.comic_id JOIN genres g ON g.id = cg.genre_id`;
+    }
+    const conditions = [];
+    if (genre)  { conditions.push('g.name = ?'); params.push(genre); }
   if (search) {
     conditions.push("(c.title LIKE ? OR c.author LIKE ? OR IFNULL(c.translator, '') LIKE ?)");
     params.push(`%${search}%`, `%${search}%`, `%${search}%`);
@@ -124,6 +125,10 @@ router.get('/', optionalAuth, (req, res) => {
 
   const comics = db.prepare(query).all(...params);
   res.json({ comics: enrichComicListBatch(comics), total });
+  } catch (error) {
+    console.error('[/api/comics] Error:', error.message);
+    res.status(500).json({ error: 'Lỗi server: ' + error.message });
+  }
 });
 
 // GET /api/comics/featured

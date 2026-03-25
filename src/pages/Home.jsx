@@ -71,9 +71,9 @@ export default function Home() {
                     : [];
 
                 // Keep page usable even if one endpoint temporarily fails.
-                const safeFeatured = featuredData.slice(0, FEATURED_LIMIT);
-                const safePopular = popularData.slice(0, POPULAR_LIMIT);
-                const safeLatest = latestData.slice(0, LATEST_LIMIT);
+                const safeFeatured = Array.isArray(featuredData) ? featuredData.slice(0, FEATURED_LIMIT) : [];
+                const safePopular = Array.isArray(popularData) ? popularData.slice(0, POPULAR_LIMIT) : [];
+                const safeLatest = Array.isArray(latestData) ? latestData.slice(0, LATEST_LIMIT) : [];
 
                 setFeatured(safeFeatured.length ? safeFeatured : safePopular);
                 setPopular(safePopular);

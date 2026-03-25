@@ -5,7 +5,7 @@ import { fileURLToPath } from 'url';
 import 'dotenv/config';
 
 // Import DB to ensure it's initialized on startup
-import './db.js';
+import db from './db.js';
 
 import comicsRouter    from './routes/comics.js';
 import chaptersRouter  from './routes/chapters.js';
@@ -53,7 +53,20 @@ app.use('/api/history',   historyRouter);
 app.use('/api/admin',     adminRouter);
 
 // Health check
-app.get('/api/health', (_, res) => res.json({ status: 'ok', time: new Date().toISOString() }));
+app.get('/api/health', (_, res) => {
+  try {
+    const comicsCount = db.prepare('SELECT COUNT(*) as cnt FROM comics').get().cnt;
+    const usersCount = db.prepare('SELECT COUNT(*) as cnt FROM users').get().cnt;
+    res.json({
+      status: 'ok',
+      time: new Date().toISOString(),
+      db: { comicsCount, usersCount }
+    });
+  } catch (err) {
+    console.error('[/api/health] DB error:', err.message);
+    res.status(500).json({ status: 'error', error: err.message });
+  }
+});
 // ── Serve React App ───────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, '../dist')));
 
