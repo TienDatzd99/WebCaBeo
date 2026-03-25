@@ -361,6 +361,26 @@
 }
 .fstar.lit { color: #eab308; }
 .fstar:hover { transform: scale(1.2); }
+.review-msg { margin-top: 0.15rem; font-size: 0.68rem; }
+.review-err { color: #fca5a5; }
+.review-submit-wrap { display: flex; justify-content: flex-end; }
+.review-submit-btn {
+  margin-top: 0.1rem;
+  background: #dc2626;
+  border: 1px solid rgba(255,255,255,0.14);
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.42rem 0.8rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.2s, opacity 0.2s;
+}
+.review-submit-btn:hover { background: #ef4444; }
+.review-submit-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+}
 
 /* ── Chapter List ── */
 .chap-sec-head {

@@ -7,6 +7,7 @@ import {
 } from 'react-icons/fi';
 import { getComics, getComic, getComicChapters, invalidateComicCache, prefetchComicDetail, prefetchHomeData } from '../api/comics.js';
 import { toggleFavorite, rateComic } from '../api/auth.js';
+import { getComicReviews, submitComicReview } from '../api/ratings.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import './ComicDetail.css';
 
@@ -33,16 +34,21 @@ export default function ComicDetail() {
   /* review form */
   const [rName,    setRName]    = useState('');
   const [rComment, setRComment] = useState('');
+  const [reviews,  setReviews]  = useState([]);
+  const [reviewErr, setReviewErr] = useState('');
+  const [savingReview, setSavingReview] = useState(false);
 
   useEffect(() => {
     setLoading(true);
-    Promise.all([getComic(id), getComicChapters(id), getComics({ limit: 10 })])
-      .then(([c, ch, rel]) => {
+    Promise.all([getComic(id), getComicChapters(id), getComics({ limit: 10 }), getComicReviews(id)])
+      .then(([c, ch, rel, rv]) => {
         setComic(c.data);
         setFaved(c.data.isFavorited || false);
         setMyRating(c.data.userRating || 0);
         setChapters(ch.data);
         setRelated((rel.data.comics || rel.data).filter(x => String(x.id) !== String(id)));
+        setReviews(rv.data.reviews || []);
+        setReviewErr('');
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -85,6 +91,47 @@ export default function ComicDetail() {
     invalidateComicCache(id);
   };
 
+  const handleSubmitReview = async () => {
+    if (!user) return navigate('/login');
+
+    const comment = rComment.trim();
+    const name = rName.trim();
+    if (!comment) {
+      setReviewErr('Vui lòng nhập nhận xét trước khi gửi.');
+      return;
+    }
+
+    setSavingReview(true);
+    setReviewErr('');
+    try {
+      const r = await submitComicReview(id, {
+        name,
+        comment,
+        score: myRating || undefined,
+      });
+
+      if (r.data.review) {
+        setReviews(prev => [
+          r.data.review,
+          ...prev.filter(item => item.userId !== r.data.review.userId),
+        ]);
+      }
+
+      setComic(p => ({
+        ...p,
+        rating: r.data.rating,
+        ratingCount: r.data.ratingCount,
+      }));
+      if (r.data.userRating) setMyRating(r.data.userRating);
+      setRComment('');
+      invalidateComicCache(id);
+    } catch (err) {
+      setReviewErr(err?.response?.data?.error || 'Không gửi được nhận xét. Vui lòng thử lại.');
+    } finally {
+      setSavingReview(false);
+    }
+  };
+
   const scrollRel = (dir) => {
     relRef.current?.scrollBy({ left: dir * 300, behavior: 'smooth' });
   };
@@ -105,12 +152,6 @@ export default function ComicDetail() {
     : DEFAULT_AUDIO_URL;
   const translatorName = (comic.translator || comic.author || '').trim();
   const authorName = (comic.author || '').trim();
-
-  /* fake reviews for demo */
-  const reviews = [
-    { name: 'Anonymous', stars: 5, text: 'Truyện hay lắm!', date: '13/1/2026' },
-    { name: 'Anonymous', stars: 5, text: 'Đọc một hơi xong luôn!', date: '13/1/2026' },
-  ];
 
   return (
     <div className="cd-page fade-in">
@@ -244,6 +285,7 @@ export default function ComicDetail() {
                   <div className="form-stars">
                     {[1,2,3,4,5].map(s => (
                       <button key={s}
+                        type="button"
                         className={`fstar ${s <= (hov || myRating) ? 'lit' : ''}`}
                         onMouseEnter={() => setHov(s)}
                         onMouseLeave={() => setHov(0)}
@@ -261,6 +303,17 @@ export default function ComicDetail() {
                     onChange={e => setRComment(e.target.value)}
                     rows={3}
                   />
+                </div>
+                {reviewErr && <p className="review-msg review-err">{reviewErr}</p>}
+                <div className="review-submit-wrap">
+                  <button
+                    type="button"
+                    className="review-submit-btn"
+                    onClick={handleSubmitReview}
+                    disabled={savingReview}
+                  >
+                    {savingReview ? 'Đang gửi...' : 'Gửi nhận xét'}
+                  </button>
                 </div>
               </div>
             </section>
@@ -290,17 +343,18 @@ export default function ComicDetail() {
             <section className="cd-section">
               <h2 className="cd-sec-title">Danh sách các đánh giá</h2>
               <div className="rev-list">
-                {reviews.map((r, i) => (
-                  <div key={i} className="rev-card">
+                {reviews.length === 0 && <p className="chap-empty">Chưa có nhận xét nào.</p>}
+                {reviews.map((r) => (
+                  <div key={r.id} className="rev-card">
                     <div className="rev-header">
-                      <div className="rev-avatar">A</div>
+                      <div className="rev-avatar">{(r.name || 'A').trim().charAt(0).toUpperCase()}</div>
                       <div className="rev-meta">
                         <span className="rev-name">{r.name}</span>
                         <div className="rev-stars">
                           {[1,2,3,4,5].map(s => <span key={s} className={`star-sm ${s <= r.stars ? 'lit' : ''}`}>★</span>)}
                         </div>
                       </div>
-                      <span className="rev-date">{r.date}</span>
+                      <span className="rev-date">{new Date(r.date).toLocaleDateString('vi-VN')}</span>
                     </div>
                     <p className="rev-text">{r.text}</p>
                   </div>

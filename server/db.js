@@ -132,6 +132,17 @@ db.exec(`
     PRIMARY KEY (user_id, comic_id)
   );
 
+  CREATE TABLE IF NOT EXISTS reviews (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id    INTEGER NOT NULL REFERENCES users(id)  ON DELETE CASCADE,
+    comic_id   INTEGER NOT NULL REFERENCES comics(id) ON DELETE CASCADE,
+    display_name TEXT,
+    comment    TEXT NOT NULL,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now')),
+    UNIQUE (user_id, comic_id)
+  );
+
   CREATE TABLE IF NOT EXISTS token_revocations (
     jti         TEXT PRIMARY KEY,
     user_id     INTEGER REFERENCES users(id) ON DELETE SET NULL,
@@ -158,6 +169,7 @@ db.exec(`
 
   CREATE INDEX IF NOT EXISTS idx_favorites_comic_id ON favorites(comic_id);
   CREATE INDEX IF NOT EXISTS idx_ratings_comic_id ON ratings(comic_id);
+  CREATE INDEX IF NOT EXISTS idx_reviews_comic_id_created_at ON reviews(comic_id, created_at DESC);
 
   CREATE INDEX IF NOT EXISTS idx_home_sliders_active_order ON home_sliders(is_active, sort_order, id);
 `);
