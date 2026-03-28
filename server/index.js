@@ -23,16 +23,16 @@ const DEFAULT_ORIGINS = ['http://localhost:5173', 'http://localhost:3001', 'http
 const FRONTEND_ORIGINS = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',').map((o) => o.trim()).filter(Boolean)
   : DEFAULT_ORIGINS;
+const ALLOWED_ORIGINS = new Set(FRONTEND_ORIGINS);
+const SERVE_FRONTEND = process.env.SERVE_FRONTEND !== 'false';
 
-// Allow same-origin and configured origins in production
+// Allow same-origin and explicitly configured origins.
 const corsOptions = {
   origin: (origin, cb) => {
-    if (!origin || FRONTEND_ORIGINS.includes(origin)) {
-      cb(null, true);
-    } else if (process.env.NODE_ENV === 'production' && !origin) {
+    if (!origin || ALLOWED_ORIGINS.has(origin)) {
       cb(null, true);
     } else {
-      cb(null, true);
+      cb(new Error(`CORS blocked for origin: ${origin}`));
     }
   },
   credentials: true,
@@ -82,28 +82,45 @@ app.get('/api/test', (req, res) => {
     path: req.path
   });
 });
-// ── Serve React App ───────────────────────────────────────────────────────
-app.use(express.static(path.join(__dirname, '../dist'), {
-  maxAge: '1d',
-  setHeaders: (res, filePath) => {
-    if (filePath.endsWith('.html')) {
-      res.setHeader('Cache-Control', 'no-cache');
-      return;
-    }
 
-    if (filePath.includes('/assets/')) {
-      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
-    }
-  },
-}));
+if (SERVE_FRONTEND) {
+  // ── Serve React App ─────────────────────────────────────────────────────
+  app.use(express.static(path.join(__dirname, '../dist'), {
+    maxAge: '1d',
+    setHeaders: (res, filePath) => {
+      if (filePath.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache');
+        return;
+      }
 
-// SPA fallback - serve index.html for all unmatched non-API routes
-app.use((req, res, next) => {
-  if (req.path.startsWith('/api')) {
-    return next();
-  }
-  return res.sendFile(path.join(__dirname, '../dist/index.html'));
-});
+      if (filePath.includes('/assets/')) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      }
+    },
+  }));
+
+  // SPA fallback - serve index.html for all unmatched non-API routes
+  app.use((req, res, next) => {
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
+    return res.sendFile(path.join(__dirname, '../dist/index.html'));
+  });
+} else {
+  // API-only mode: do not serve frontend/static from Railway.
+  app.get('/', (_req, res) => {
+    const preferredFrontend = FRONTEND_ORIGINS.values().next().value;
+    if (preferredFrontend) {
+      return res.redirect(302, preferredFrontend);
+    }
+    return res.status(200).json({
+      name: 'Truyen Cua Ca API',
+      status: 'ok',
+      docs: '/api/health',
+    });
+  });
+}
+
 app.listen(PORT, () => {
-  console.log(`Truyện Của Cá API running at http://localhost:${PORT}`);
+  console.log(`Truyện Của Cá API running at http://localhost:${PORT} (serveFrontend=${SERVE_FRONTEND})`);
 });
