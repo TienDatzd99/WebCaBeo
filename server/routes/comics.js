@@ -16,13 +16,31 @@ const setCacheHeaders = (req, res, { publicMaxAge = 30, sMaxAge = 90 } = {}) => 
 };
 
 const isInlineImageData = (value) => typeof value === 'string' && value.startsWith('data:image/');
-const sanitizeImageUrl = (value) => (isInlineImageData(value) ? '' : value);
-const sanitizeComicMedia = (comic) => {
+const mediaUrlFor = (comicId, kind) => `/api/comics/${comicId}/media/${kind}`;
+
+const toPublicImageUrl = (comicId, kind, value) => {
+  if (!value || typeof value !== 'string') return '';
+  if (isInlineImageData(value)) return mediaUrlFor(comicId, kind);
+  return value;
+};
+
+const sanitizeComicMedia = (comic, idSource) => {
   if (!comic) return comic;
+  const comicId = idSource ?? comic.id;
   return {
     ...comic,
-    cover_url: sanitizeImageUrl(comic.cover_url),
-    home_cover_url: sanitizeImageUrl(comic.home_cover_url),
+    cover_url: toPublicImageUrl(comicId, 'cover', comic.cover_url),
+    home_cover_url: toPublicImageUrl(comicId, 'home-cover', comic.home_cover_url),
+  };
+};
+
+const parseInlineImageData = (value) => {
+  if (!isInlineImageData(value)) return null;
+  const match = /^data:(image\/[a-zA-Z0-9.+-]+);base64,(.+)$/.exec(value);
+  if (!match) return null;
+  return {
+    mimeType: match[1],
+    base64: match[2],
   };
 };
 
@@ -44,7 +62,7 @@ const enrichComic = (comic) => {
     ratingCount: ratingRow.cnt,
     chapterCount: chapterRow.cnt,
     latestChapter: latestChap ? latestChap.number : null,
-  });
+  }, comic.id);
 };
 
 const enrichComicListBatch = (comics = []) => {
@@ -94,7 +112,7 @@ const enrichComicListBatch = (comics = []) => {
       ratingCount: ratingRow?.cnt || 0,
       chapterCount: chapterRow?.cnt || 0,
       latestChapter: chapterRow?.latestChapter ?? null,
-    });
+    }, comic.id);
   });
 };
 
@@ -106,8 +124,8 @@ const toHomeCardComic = (comic, { includeDescription = false } = {}) => {
     title: comic.title,
     author: comic.author,
     translator: comic.translator,
-    cover_url: sanitizeImageUrl(comic.cover_url),
-    home_cover_url: sanitizeImageUrl(comic.home_cover_url),
+    cover_url: toPublicImageUrl(comic.id, 'cover', comic.cover_url),
+    home_cover_url: toPublicImageUrl(comic.id, 'home-cover', comic.home_cover_url),
     status: comic.status,
     views: comic.views,
     rating: comic.rating,
@@ -191,6 +209,37 @@ router.get('/home', (req, res) => {
   } catch (error) {
     console.error('[/api/comics/home] Error:', error.message);
     res.status(500).json({ error: 'Lỗi server: ' + error.message });
+  }
+});
+
+// GET /api/comics/:id/media/:kind - serve legacy inline images without bloating JSON payloads
+router.get('/:id/media/:kind', (req, res) => {
+  try {
+    const kind = String(req.params.kind || '').toLowerCase();
+    if (!['cover', 'home-cover'].includes(kind)) {
+      return res.status(400).json({ error: 'Invalid media kind' });
+    }
+
+    const comic = db.prepare('SELECT id, cover_url, home_cover_url FROM comics WHERE id = ?').get(req.params.id);
+    if (!comic) return res.status(404).json({ error: 'Comic not found' });
+
+    const rawValue = kind === 'cover' ? comic.cover_url : comic.home_cover_url;
+    const parsed = parseInlineImageData(rawValue);
+
+    if (!parsed) {
+      if (typeof rawValue === 'string' && rawValue.trim()) {
+        return res.redirect(302, rawValue);
+      }
+      return res.status(404).json({ error: 'Media not found' });
+    }
+
+    const buffer = Buffer.from(parsed.base64, 'base64');
+    res.setHeader('Content-Type', parsed.mimeType);
+    res.setHeader('Cache-Control', 'public, max-age=3600, stale-while-revalidate=86400');
+    return res.send(buffer);
+  } catch (error) {
+    console.error('[/api/comics/:id/media/:kind] Error:', error.message);
+    return res.status(500).json({ error: 'Lỗi server: ' + error.message });
   }
 });
 
