@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 600" role="img" aria-label="No cover">
+  <defs>
+    <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0%" stop-color="#1f2937"/>
+      <stop offset="100%" stop-color="#374151"/>
+    </linearGradient>
+  </defs>
+  <rect width="400" height="600" fill="url(#bg)"/>
+  <g fill="#9ca3af" font-family="Arial, sans-serif" text-anchor="middle">
+    <circle cx="200" cy="245" r="58" fill="#4b5563"/>
+    <path d="M164 245h72M200 209v72" stroke="#d1d5db" stroke-width="10" stroke-linecap="round"/>
+    <text x="200" y="340" font-size="26" font-weight="700">Chưa có ảnh bìa</text>
+    <text x="200" y="372" font-size="16">Vui lòng cập nhật ảnh từ Admin</text>
+  </g>
+</svg>

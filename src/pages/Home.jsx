@@ -15,6 +15,13 @@ const POPULAR_LIMIT = 10;
 const LATEST_LIMIT = 10;
 const HOME_CACHE_KEY = 'home:payload:v1';
 const HOME_CACHE_MAX_AGE = 5 * 60 * 1000;
+const FALLBACK_COVER = '/placeholder-cover.svg';
+const FALLBACK_HOME = '/placeholder-home.svg';
+
+const safeImage = (value, fallback = FALLBACK_COVER) => {
+    if (typeof value === 'string' && value.trim()) return value;
+    return fallback;
+};
 
 function getInitialHomeCache() {
     if (typeof window === 'undefined') {
@@ -88,7 +95,7 @@ export default function Home() {
     }, []);
 
     const activeComic = featured[activeIdx] || featured[0] || null;
-    const activeHomeCover = activeComic?.home_cover_url || activeComic?.cover_url || '';
+    const activeHomeCover = safeImage(activeComic?.home_cover_url || activeComic?.cover_url, FALLBACK_HOME);
     const activeDisplayTitle = toTitleCase(activeComic?.title || '');
     const sliderItemClass = 'w-[85%] shrink-0 sm:w-[47%] lg:w-[24%] xl:w-[calc((100%-80px)/5)]';
 
@@ -181,7 +188,7 @@ export default function Home() {
                                             className="w-full"
                                         >
                                             {featured.map((comic) => {
-                                                const homeCover = comic.home_cover_url || comic.cover_url;
+                                                const homeCover = safeImage(comic.home_cover_url || comic.cover_url, FALLBACK_HOME);
                                                 const displayTitle = toTitleCase(comic.title || '');
                                                 const seedText = String(comic.id ?? '0');
                                                 let hash = 0;
@@ -220,6 +227,9 @@ export default function Home() {
                                                                                 loading={isActive ? 'eager' : 'lazy'}
                                                                                 decoding="async"
                                                                                 fetchPriority={isActive ? 'high' : 'auto'}
+                                                                                onError={(e) => {
+                                                                                    e.currentTarget.src = FALLBACK_HOME;
+                                                                                }}
                                                                                 style={{
                                                                                     objectPosition: 'left top',
                                                                                     transform: `scale(${imageScale})`,

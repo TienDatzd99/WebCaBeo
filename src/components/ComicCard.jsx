@@ -2,6 +2,14 @@ import { Link } from 'react-router-dom';
 import { prefetchComicDetail } from '../api/comics.js';
 import './ComicCard.css';
 
+const FALLBACK_COVER = '/placeholder-cover.svg';
+const FALLBACK_HOME = '/placeholder-home.svg';
+
+const withFallback = (value, fallback) => {
+  if (typeof value === 'string' && value.trim()) return value;
+  return fallback;
+};
+
 const STATUS_META = {
   ongoing: { label: 'Đang ra', cls: 'badge-ongoing' },
   completed: { label: 'Hoàn thành', cls: 'badge-done' },
@@ -14,7 +22,7 @@ const getStatusMeta = (status) => STATUS_META[status] || STATUS_META.ongoing;
 export function CardSquare({ comic }) {
   const statusMeta = getStatusMeta(comic.status);
   const rating = Number(comic.rating ?? 0);
-  const homeImage = comic.home_cover_url || comic.cover_url;
+  const homeImage = withFallback(comic.home_cover_url || comic.cover_url, FALLBACK_HOME);
   const handlePrefetch = () => {
     prefetchComicDetail(comic.id).catch(() => {});
   };
@@ -28,7 +36,14 @@ export function CardSquare({ comic }) {
       onTouchStart={handlePrefetch}
     >
       <div className="card-sq-img">
-        <img src={homeImage} alt={comic.title} loading="lazy" />
+        <img
+          src={homeImage}
+          alt={comic.title}
+          loading="lazy"
+          onError={(e) => {
+            e.currentTarget.src = FALLBACK_HOME;
+          }}
+        />
         <span className={`card-badge ${statusMeta.cls}`}>{statusMeta.label}</span>
       </div>
       <div className="card-sq-info">
@@ -48,6 +63,7 @@ export function CardSquare({ comic }) {
 /* Portrait card — used in "Truyện mới nhất" grid */
 export function CardPortrait({ comic }) {
   const statusMeta = getStatusMeta(comic.status);
+  const coverImage = withFallback(comic.cover_url, FALLBACK_COVER);
   const handlePrefetch = () => {
     prefetchComicDetail(comic.id).catch(() => {});
   };
@@ -61,7 +77,14 @@ export function CardPortrait({ comic }) {
       onTouchStart={handlePrefetch}
     >
       <div className="card-pt-img">
-        <img src={comic.cover_url} alt={comic.title} loading="lazy" />
+        <img
+          src={coverImage}
+          alt={comic.title}
+          loading="lazy"
+          onError={(e) => {
+            e.currentTarget.src = FALLBACK_COVER;
+          }}
+        />
         <span className={`card-badge ${statusMeta.cls}`}>{statusMeta.label}</span>
         {comic.isNew && <span className="card-badge badge-new" style={{ top: '6px', right: comic.status ? '68px' : '6px' }}>Mới</span>}
       </div>

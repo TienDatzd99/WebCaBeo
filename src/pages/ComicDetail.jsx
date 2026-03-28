@@ -17,6 +17,13 @@ const STATUS = {
 };
 
 const DEFAULT_AUDIO_URL = 'https://www.youtube.com/@CaBeoAudio';
+const FALLBACK_COVER = '/placeholder-cover.svg';
+const FALLBACK_HOME = '/placeholder-home.svg';
+
+const safeImage = (value, fallback = FALLBACK_COVER) => {
+  if (typeof value === 'string' && value.trim()) return value;
+  return fallback;
+};
 
 export default function ComicDetail() {
   const { id }       = useParams();
@@ -152,19 +159,28 @@ export default function ComicDetail() {
     : DEFAULT_AUDIO_URL;
   const translatorName = (comic.translator || comic.author || '').trim();
   const authorName = (comic.author || '').trim();
+  const coverImage = safeImage(comic.cover_url, FALLBACK_COVER);
+  const heroImage = safeImage(comic.home_cover_url || comic.cover_url, FALLBACK_HOME);
 
   return (
     <div className="cd-page fade-in">
 
       {/* ═══════════════ HERO ═══════════════ */}
       <div className="cd-hero">
-        <div className="cd-hero-bg" style={{ backgroundImage: `url(${comic.cover_url})` }} />
+        <div className="cd-hero-bg" style={{ backgroundImage: `url(${heroImage})` }} />
         <div className="cd-hero-veil" />
 
         <div className="cd-hero-body">
           {/* LEFT: cover */}
           <div className="cd-cover-col">
-            <img src={comic.cover_url} alt={comic.title} className="cd-cover" />
+            <img
+              src={coverImage}
+              alt={comic.title}
+              className="cd-cover"
+              onError={(e) => {
+                e.currentTarget.src = FALLBACK_COVER;
+              }}
+            />
           </div>
 
           {/* RIGHT: meta */}
@@ -380,7 +396,14 @@ export default function ComicDetail() {
                   onTouchStart={() => prefetchComicDetail(r.id).catch(() => {})}
                 >
                   <div className="rel-img-wrap">
-                    <img src={r.home_cover_url || r.cover_url} alt={r.title} className="rel-img" />
+                    <img
+                      src={safeImage(r.home_cover_url || r.cover_url, FALLBACK_HOME)}
+                      alt={r.title}
+                      className="rel-img"
+                      onError={(e) => {
+                        e.currentTarget.src = FALLBACK_HOME;
+                      }}
+                    />
                     <span className={`rel-badge ${r.status === 'completed' ? 'rb-done' : 'rb-ongoing'}`}>
                       {r.status === 'completed' ? 'Hoàn Thành' : 'Đang ra'}
                     </span>
