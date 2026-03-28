@@ -18,19 +18,27 @@ const setCacheHeaders = (req, res, { publicMaxAge = 30, sMaxAge = 90 } = {}) => 
 const isInlineImageData = (value) => typeof value === 'string' && value.startsWith('data:image/');
 const mediaUrlFor = (comicId, kind) => `/api/comics/${comicId}/media/${kind}`;
 
-const toPublicImageUrl = (comicId, kind, value) => {
+const getApiBaseUrl = (req) => {
+  const forwardedProto = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim();
+  const proto = forwardedProto || req.protocol || 'https';
+  const forwardedHost = String(req.headers['x-forwarded-host'] || '').split(',')[0].trim();
+  const host = forwardedHost || req.get('host');
+  return `${proto}://${host}`;
+};
+
+const toPublicImageUrl = (comicId, kind, value, apiBaseUrl = '') => {
   if (!value || typeof value !== 'string') return '';
-  if (isInlineImageData(value)) return mediaUrlFor(comicId, kind);
+  if (isInlineImageData(value)) return `${apiBaseUrl}${mediaUrlFor(comicId, kind)}`;
   return value;
 };
 
-const sanitizeComicMedia = (comic, idSource) => {
+const sanitizeComicMedia = (comic, idSource, apiBaseUrl = '') => {
   if (!comic) return comic;
   const comicId = idSource ?? comic.id;
   return {
     ...comic,
-    cover_url: toPublicImageUrl(comicId, 'cover', comic.cover_url),
-    home_cover_url: toPublicImageUrl(comicId, 'home-cover', comic.home_cover_url),
+    cover_url: toPublicImageUrl(comicId, 'cover', comic.cover_url, apiBaseUrl),
+    home_cover_url: toPublicImageUrl(comicId, 'home-cover', comic.home_cover_url, apiBaseUrl),
   };
 };
 
@@ -45,7 +53,7 @@ const parseInlineImageData = (value) => {
 };
 
 // Helper to attach genres and average rating to a comic
-const enrichComic = (comic) => {
+const enrichComic = (comic, apiBaseUrl = '') => {
   if (!comic) return null;
   const genres = db.prepare(`
     SELECT g.id, g.name FROM genres g
@@ -62,10 +70,10 @@ const enrichComic = (comic) => {
     ratingCount: ratingRow.cnt,
     chapterCount: chapterRow.cnt,
     latestChapter: latestChap ? latestChap.number : null,
-  }, comic.id);
+  }, comic.id, apiBaseUrl);
 };
 
-const enrichComicListBatch = (comics = []) => {
+const enrichComicListBatch = (comics = [], apiBaseUrl = '') => {
   if (!comics.length) return [];
 
   const comicIds = comics.map((c) => c.id);
@@ -112,11 +120,11 @@ const enrichComicListBatch = (comics = []) => {
       ratingCount: ratingRow?.cnt || 0,
       chapterCount: chapterRow?.cnt || 0,
       latestChapter: chapterRow?.latestChapter ?? null,
-    }, comic.id);
+    }, comic.id, apiBaseUrl);
   });
 };
 
-const toHomeCardComic = (comic, { includeDescription = false } = {}) => {
+const toHomeCardComic = (comic, { includeDescription = false, apiBaseUrl = '' } = {}) => {
   if (!comic) return null;
 
   return {
@@ -124,8 +132,8 @@ const toHomeCardComic = (comic, { includeDescription = false } = {}) => {
     title: comic.title,
     author: comic.author,
     translator: comic.translator,
-    cover_url: toPublicImageUrl(comic.id, 'cover', comic.cover_url),
-    home_cover_url: toPublicImageUrl(comic.id, 'home-cover', comic.home_cover_url),
+    cover_url: toPublicImageUrl(comic.id, 'cover', comic.cover_url, apiBaseUrl),
+    home_cover_url: toPublicImageUrl(comic.id, 'home-cover', comic.home_cover_url, apiBaseUrl),
     status: comic.status,
     views: comic.views,
     rating: comic.rating,
@@ -140,6 +148,7 @@ const toHomeCardComic = (comic, { includeDescription = false } = {}) => {
 router.get('/home', (req, res) => {
   try {
     setCacheHeaders(req, res, { publicMaxAge: 30, sMaxAge: 120 });
+    const apiBaseUrl = getApiBaseUrl(req);
 
     const HOME_COMIC_FIELDS = `
       c.id,
@@ -192,17 +201,17 @@ router.get('/home', (req, res) => {
     });
 
     const enrichedById = new Map(
-      enrichComicListBatch([...uniqueMap.values()]).map((comic) => [comic.id, comic])
+      enrichComicListBatch([...uniqueMap.values()], apiBaseUrl).map((comic) => [comic.id, comic])
     );
 
     const featured = featuredRaw
-      .map((comic) => toHomeCardComic(enrichedById.get(comic.id), { includeDescription: true }))
+      .map((comic) => toHomeCardComic(enrichedById.get(comic.id), { includeDescription: true, apiBaseUrl }))
       .filter(Boolean);
     const popular = popularRaw
-      .map((comic) => toHomeCardComic(enrichedById.get(comic.id)))
+      .map((comic) => toHomeCardComic(enrichedById.get(comic.id), { apiBaseUrl }))
       .filter(Boolean);
     const latest = latestRaw
-      .map((comic) => toHomeCardComic(enrichedById.get(comic.id)))
+      .map((comic) => toHomeCardComic(enrichedById.get(comic.id), { apiBaseUrl }))
       .filter(Boolean);
 
     res.json({ featured, popular, latest });
@@ -247,6 +256,7 @@ router.get('/:id/media/:kind', (req, res) => {
 router.get('/featured', (req, res) => {
   try {
     setCacheHeaders(req, res, { publicMaxAge: 30, sMaxAge: 120 });
+    const apiBaseUrl = getApiBaseUrl(req);
 
     const rows = db.prepare(`
       SELECT c.*
@@ -259,10 +269,10 @@ router.get('/featured', (req, res) => {
 
     if (!rows.length) {
       const fallback = db.prepare('SELECT * FROM comics ORDER BY views DESC, created_at DESC LIMIT 10').all();
-      return res.json({ comics: enrichComicListBatch(fallback) });
+      return res.json({ comics: enrichComicListBatch(fallback, apiBaseUrl) });
     }
 
-    res.json({ comics: enrichComicListBatch(rows) });
+    res.json({ comics: enrichComicListBatch(rows, apiBaseUrl) });
   } catch (error) {
     console.error('[/api/comics/featured] Error:', error.message);
     res.status(500).json({ error: 'Lỗi server: ' + error.message });
@@ -289,6 +299,7 @@ router.get('/:id/chapters', (req, res) => {
 router.get('/', optionalAuth, (req, res) => {
   try {
     setCacheHeaders(req, res, { publicMaxAge: 20, sMaxAge: 60 });
+    const apiBaseUrl = getApiBaseUrl(req);
 
     const { type, genre, search, sort, status, limit = 12, page = 1, offset } = req.query;
     const off = offset !== undefined ? parseInt(offset) : (parseInt(page) - 1) * parseInt(limit);
@@ -322,7 +333,7 @@ router.get('/', optionalAuth, (req, res) => {
     params.push(parseInt(limit), off);
 
     const comics = db.prepare(query).all(...params);
-    res.json({ comics: enrichComicListBatch(comics), total });
+    res.json({ comics: enrichComicListBatch(comics, apiBaseUrl), total });
   } catch (error) {
     console.error('[/api/comics] Error:', error.message);
     res.status(500).json({ error: 'Lỗi server: ' + error.message });
@@ -333,6 +344,7 @@ router.get('/', optionalAuth, (req, res) => {
 router.get('/:id', optionalAuth, (req, res) => {
   try {
     setCacheHeaders(req, res, { publicMaxAge: 10, sMaxAge: 20 });
+    const apiBaseUrl = getApiBaseUrl(req);
 
     const comic = db.prepare('SELECT * FROM comics WHERE id = ?').get(req.params.id);
     if (!comic) return res.status(404).json({ error: 'Comic not found' });
@@ -340,7 +352,7 @@ router.get('/:id', optionalAuth, (req, res) => {
     // Increment views
     db.prepare('UPDATE comics SET views = views + 1 WHERE id = ?').run(comic.id);
 
-    const enriched = enrichComic(comic);
+    const enriched = enrichComic(comic, apiBaseUrl);
 
     let isFavorited = false;
     let userRating = null;
