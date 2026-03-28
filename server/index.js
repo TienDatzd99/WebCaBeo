@@ -24,7 +24,16 @@ const FRONTEND_ORIGINS = process.env.FRONTEND_URL
   ? process.env.FRONTEND_URL.split(',').map((o) => o.trim()).filter(Boolean)
   : DEFAULT_ORIGINS;
 const ALLOWED_ORIGINS = new Set(FRONTEND_ORIGINS);
-const SERVE_FRONTEND = process.env.SERVE_FRONTEND !== 'false';
+
+function parseEnvBoolean(value, defaultValue = true) {
+  if (value === undefined || value === null) return defaultValue;
+  const normalized = String(value).trim().toLowerCase();
+  if (['1', 'true', 'yes', 'on'].includes(normalized)) return true;
+  if (['0', 'false', 'no', 'off'].includes(normalized)) return false;
+  return defaultValue;
+}
+
+const SERVE_FRONTEND = parseEnvBoolean(process.env.SERVE_FRONTEND, true);
 
 // Allow same-origin and explicitly configured origins.
 const corsOptions = {
@@ -65,7 +74,11 @@ app.get('/api/health', (_, res) => {
     res.json({
       status: 'ok',
       time: new Date().toISOString(),
-      db: { comicsCount, usersCount }
+      db: { comicsCount, usersCount },
+      runtime: {
+        serveFrontend: SERVE_FRONTEND,
+        frontendOrigins: FRONTEND_ORIGINS,
+      },
     });
   } catch (err) {
     console.error('[/api/health] DB error:', err.message);
