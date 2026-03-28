@@ -15,6 +15,17 @@ const setCacheHeaders = (req, res, { publicMaxAge = 30, sMaxAge = 90 } = {}) => 
   res.set('Cache-Control', `public, max-age=${publicMaxAge}, s-maxage=${sMaxAge}, stale-while-revalidate=${swr}`);
 };
 
+const isInlineImageData = (value) => typeof value === 'string' && value.startsWith('data:image/');
+const sanitizeImageUrl = (value) => (isInlineImageData(value) ? '' : value);
+const sanitizeComicMedia = (comic) => {
+  if (!comic) return comic;
+  return {
+    ...comic,
+    cover_url: sanitizeImageUrl(comic.cover_url),
+    home_cover_url: sanitizeImageUrl(comic.home_cover_url),
+  };
+};
+
 // Helper to attach genres and average rating to a comic
 const enrichComic = (comic) => {
   if (!comic) return null;
@@ -26,14 +37,14 @@ const enrichComic = (comic) => {
   const ratingRow = db.prepare('SELECT AVG(score) as avg, COUNT(*) as cnt FROM ratings WHERE comic_id = ?').get(comic.id);
   const chapterRow = db.prepare('SELECT COUNT(*) as cnt FROM chapters WHERE comic_id = ?').get(comic.id);
   const latestChap = db.prepare('SELECT number FROM chapters WHERE comic_id = ? ORDER BY number DESC LIMIT 1').get(comic.id);
-  return {
+  return sanitizeComicMedia({
     ...comic,
     genres,
     rating: ratingRow.avg ? parseFloat(ratingRow.avg.toFixed(1)) : null,
     ratingCount: ratingRow.cnt,
     chapterCount: chapterRow.cnt,
     latestChapter: latestChap ? latestChap.number : null,
-  };
+  });
 };
 
 const enrichComicListBatch = (comics = []) => {
@@ -76,14 +87,14 @@ const enrichComicListBatch = (comics = []) => {
     const ratingRow = ratingByComic.get(comic.id);
     const chapterRow = chapterByComic.get(comic.id);
 
-    return {
+    return sanitizeComicMedia({
       ...comic,
       genres: genresByComic.get(comic.id) || [],
       rating: ratingRow?.avg ? parseFloat(ratingRow.avg.toFixed(1)) : null,
       ratingCount: ratingRow?.cnt || 0,
       chapterCount: chapterRow?.cnt || 0,
       latestChapter: chapterRow?.latestChapter ?? null,
-    };
+    });
   });
 };
 
@@ -95,8 +106,8 @@ const toHomeCardComic = (comic, { includeDescription = false } = {}) => {
     title: comic.title,
     author: comic.author,
     translator: comic.translator,
-    cover_url: comic.cover_url,
-    home_cover_url: comic.home_cover_url,
+    cover_url: sanitizeImageUrl(comic.cover_url),
+    home_cover_url: sanitizeImageUrl(comic.home_cover_url),
     status: comic.status,
     views: comic.views,
     rating: comic.rating,
