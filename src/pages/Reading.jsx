@@ -6,6 +6,7 @@ import { getChapter, markChapterRead } from '../api/chapters.js';
 import { getComicChapters } from '../api/comics.js';
 import { reportSecurityFlag } from '../api/auth.js';
 import { useAuth } from '../context/AuthContext.jsx';
+import AdGate from '../components/AdGate.jsx';
 import './Reading.css';
 
 const Reading = () => {
@@ -17,6 +18,7 @@ const Reading = () => {
   const [loading, setLoading] = useState(true);
   const [blocked, setBlocked] = useState(false);
   const [hasReachedEnd, setHasReachedEnd] = useState(false);
+  const [isAdUnlocked, setIsAdUnlocked] = useState(false);
   const hasReportedRef = useRef(false);
   const endTriggerRef = useRef(null);
 
@@ -24,6 +26,7 @@ const Reading = () => {
     setLoading(true);
     setChapter(null);
     setHasReachedEnd(false);
+    setIsAdUnlocked(false); // Reset ad lock when chapter changes
     getChapter(chapterId)
       .then(r => {
         setChapter(r.data);
@@ -196,8 +199,18 @@ const Reading = () => {
     </div>
   );
 
+  // Check if user needs to view ad for this chapter
+  const shouldShowAd = chapter && chapter.number >= 2 && !isAdUnlocked;
+
   return (
-    <div className="reading-page fade-in">
+    <>
+      {shouldShowAd && (
+        <AdGate 
+          chapterNumber={chapter.number}
+          onUnlock={() => setIsAdUnlocked(true)}
+        />
+      )}
+      <div className="reading-page fade-in" style={{ pointerEvents: shouldShowAd ? 'none' : 'auto', opacity: shouldShowAd ? 0.5 : 1 }}>
       <section className="novel-shell">
         <h1 className="novel-title">Chương {chapter.number}</h1>
 
@@ -267,7 +280,8 @@ const Reading = () => {
           </div>
         )}
       </section>
-    </div>
+      </div>
+    </>
   );
 };
 

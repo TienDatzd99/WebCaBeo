@@ -158,6 +158,16 @@ db.exec(`
     created_at TEXT    DEFAULT (datetime('now'))
   );
 
+  CREATE TABLE IF NOT EXISTS ads (
+    id         INTEGER PRIMARY KEY AUTOINCREMENT,
+    title      TEXT NOT NULL,
+    image_url  TEXT NOT NULL,
+    link_url   TEXT NOT NULL,
+    is_active  INTEGER DEFAULT 1,
+    created_at TEXT DEFAULT (datetime('now')),
+    updated_at TEXT DEFAULT (datetime('now'))
+  );
+
   CREATE INDEX IF NOT EXISTS idx_comics_created_at ON comics(created_at);
   CREATE INDEX IF NOT EXISTS idx_comics_views ON comics(views DESC);
   CREATE INDEX IF NOT EXISTS idx_comics_status ON comics(status);
@@ -257,6 +267,35 @@ if (!alreadySeeded) {
     const hash = bcrypt.hashSync('demo1234', 10);
     db.prepare('INSERT OR IGNORE INTO users (username, email, password, role) VALUES (?, ?, ?, ?)').run('demo', 'demo@camap.com', hash, 'user');
     db.prepare('INSERT OR IGNORE INTO users (username, email, password, role) VALUES (?, ?, ?, ?)').run('admin', 'admin@camap.com', bcrypt.hashSync('admin1234', 10), 'admin');
+
+    // Seed sample ads (affiliate links)
+    const adsData = [
+      {
+        title: 'Mở Ứng Dụng LAZADA để mở khóa toàn bộ chương truyện!',
+        image_url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&h=500&fit=crop',
+        link_url: 'https://s.lazada.vn/s.6y43A',
+        is_active: 1,
+      },
+      {
+        title: 'Khám phá thế giới mua sắm trên TikTok Shop',
+        image_url: 'https://images.unsplash.com/photo-1607082348824-0a96f2a4b9da?w=500&h=500&fit=crop',
+        link_url: 'https://tiktok.com/shop',
+        is_active: 1,
+      },
+      {
+        title: 'Shopee - Ứng dụng mua sắm #1 tại Việt Nam',
+        image_url: 'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=500&h=500&fit=crop',
+        link_url: 'https://shopee.vn',
+        is_active: 1,
+      }
+    ];
+
+    const insertAd = db.prepare(`
+      INSERT INTO ads (title, image_url, link_url, is_active)
+      VALUES (@title, @image_url, @link_url, @is_active)
+    `);
+
+    adsData.forEach(ad => insertAd.run(ad));
   });
 
   seedAll();

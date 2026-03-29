@@ -15,6 +15,7 @@ import favoritesRouter from './routes/favorites.js';
 import ratingsRouter   from './routes/ratings.js';
 import historyRouter   from './routes/history.js';
 import adminRouter     from './routes/admin.js';
+import adsRouter       from './routes/ads.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -65,6 +66,7 @@ app.use('/api/favorites', favoritesRouter);
 app.use('/api/ratings',   ratingsRouter);
 app.use('/api/history',   historyRouter);
 app.use('/api/admin',     adminRouter);
+app.use('/api/ads',       adsRouter);
 
 // Health check
 app.get('/api/health', (_, res) => {
