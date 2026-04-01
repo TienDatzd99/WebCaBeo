@@ -31,6 +31,7 @@ export default function ComicDetail() {
   const navigate     = useNavigate();
   const relRef       = useRef(null);
   const heroBodyRef  = useRef(null);
+  const coverRef     = useRef(null);
 
   const [comic,    setComic]    = useState(null);
   const [chapters, setChapters] = useState([]);
@@ -85,20 +86,23 @@ export default function ComicDetail() {
   }, [comic, related]);
 
   useEffect(() => {
-    const node = heroBodyRef.current;
-    if (!node) return;
+    const heroNode = heroBodyRef.current;
+    const coverNode = coverRef.current;
+    if (!heroNode || !coverNode) return;
 
-    const MAX_DEPTH = 26;
+    const MAX_DEPTH = 42;
     let rafId = 0;
 
     const updateParallax = () => {
       rafId = 0;
-      const rect = node.getBoundingClientRect();
+      const rect = heroNode.getBoundingClientRect();
       const viewport = window.innerHeight || 1;
-      const progressRaw = (viewport - rect.top) / (viewport + rect.height);
-      const progress = Math.min(1, Math.max(0, progressRaw));
-      const offset = (progress - 0.5) * 2 * MAX_DEPTH;
-      node.style.setProperty('--cd-cover-parallax', `${offset.toFixed(2)}px`);
+      const heroCenter = rect.top + rect.height / 2;
+      const viewportCenter = viewport / 2;
+      const distance = viewportCenter - heroCenter;
+      const rawOffset = distance * 0.22;
+      const offset = Math.max(-MAX_DEPTH, Math.min(MAX_DEPTH, rawOffset));
+      coverNode.style.transform = `translateY(${offset.toFixed(2)}px)`;
     };
 
     const onScroll = () => {
@@ -114,7 +118,7 @@ export default function ComicDetail() {
       if (rafId) window.cancelAnimationFrame(rafId);
       window.removeEventListener('scroll', onScroll);
       window.removeEventListener('resize', onScroll);
-      node.style.setProperty('--cd-cover-parallax', '0px');
+      coverNode.style.transform = 'translateY(0px)';
     };
   }, [id]);
 
@@ -212,6 +216,7 @@ export default function ComicDetail() {
               src={coverImage}
               alt={comic.title}
               className="cd-cover"
+              ref={coverRef}
               onError={(e) => {
                 e.currentTarget.src = FALLBACK_COVER;
               }}

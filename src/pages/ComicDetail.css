@@ -75,8 +75,8 @@
   border-radius: 6px;
   border: 1px solid rgba(255,255,255,0.11);
   box-shadow: 0 10px 28px rgba(0,0,0,0.45);
-  transform: translateY(var(--cd-cover-parallax, 0px));
-  transition: transform 0.08s linear;
+  transform: translateY(0px);
+  transition: transform 0.04s linear;
   will-change: transform;
 }
 
