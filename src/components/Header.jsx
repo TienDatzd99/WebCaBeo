@@ -28,7 +28,10 @@ const Header = () => {
 
   const handleSearch = (e) => {
     e.preventDefault();
-    if (search.trim()) navigate(`/tim-kiem?q=${encodeURIComponent(search.trim())}`);
+    const keyword = search.trim();
+    if (!keyword) return;
+    setMobileMenuOpen(false);
+    navigate(`/search?q=${encodeURIComponent(keyword)}`);
   };
 
   return (

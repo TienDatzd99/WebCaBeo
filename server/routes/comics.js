@@ -1,4 +1,5 @@
 import express from 'express';
+import { Buffer } from 'node:buffer';
 import db from '../db.js';
 import { optionalAuth } from '../middleware/auth.js';
 
@@ -122,6 +123,69 @@ const enrichComicListBatch = (comics = [], apiBaseUrl = '') => {
       latestChapter: chapterRow?.latestChapter ?? null,
     }, comic.id, apiBaseUrl);
   });
+};
+
+const normalizeStatusFilter = (status) => {
+  const raw = String(status || '').trim().toLowerCase();
+  if (!raw) return '';
+
+  const aliases = new Map([
+    ['đang ra', 'ongoing'],
+    ['dang ra', 'ongoing'],
+    ['ongoing', 'ongoing'],
+    ['đã hoàn thành', 'completed'],
+    ['da hoan thanh', 'completed'],
+    ['completed', 'completed'],
+    ['đã dừng', 'paused'],
+    ['da dung', 'paused'],
+    ['paused', 'paused'],
+  ]);
+
+  return aliases.get(raw) || String(status || '').trim();
+};
+
+const getChapterCountCondition = (mode) => {
+  if (mode === 'short') {
+    return {
+      clause: '(SELECT COUNT(*) FROM chapters ch WHERE ch.comic_id = c.id) < ?',
+      params: [100],
+    };
+  }
+
+  if (mode === 'medium') {
+    return {
+      clause: '(SELECT COUNT(*) FROM chapters ch WHERE ch.comic_id = c.id) BETWEEN ? AND ?',
+      params: [100, 300],
+    };
+  }
+
+  if (mode === 'long') {
+    return {
+      clause: '(SELECT COUNT(*) FROM chapters ch WHERE ch.comic_id = c.id) > ?',
+      params: [300],
+    };
+  }
+
+  return null;
+};
+
+const getLoaiCondition = (loai) => {
+  const value = String(loai || '').trim().toLowerCase();
+  if (value === 'truyện ngắn' || value === 'truyen ngan') {
+    return {
+      clause: '(SELECT COUNT(*) FROM chapters ch WHERE ch.comic_id = c.id) < ?',
+      params: [100],
+    };
+  }
+
+  if (value === 'truyện dài' || value === 'truyen dai') {
+    return {
+      clause: '(SELECT COUNT(*) FROM chapters ch WHERE ch.comic_id = c.id) >= ?',
+      params: [100],
+    };
+  }
+
+  return null;
 };
 
 const toHomeCardComic = (comic, { includeDescription = false, apiBaseUrl = '' } = {}) => {
@@ -301,8 +365,25 @@ router.get('/', optionalAuth, (req, res) => {
     setCacheHeaders(req, res, { publicMaxAge: 20, sMaxAge: 60 });
     const apiBaseUrl = getApiBaseUrl(req);
 
-    const { type, genre, search, sort, status, limit = 12, page = 1, offset } = req.query;
-    const off = offset !== undefined ? parseInt(offset) : (parseInt(page) - 1) * parseInt(limit);
+    const {
+      type,
+      genre,
+      search,
+      sort,
+      status,
+      loai,
+      chapters,
+      min_rating,
+      limit = 12,
+      page = 1,
+      offset,
+    } = req.query;
+
+    const safeLimit = Math.max(1, Math.min(60, Number.parseInt(limit, 10) || 12));
+    const safePage = Math.max(1, Number.parseInt(page, 10) || 1);
+    const off = offset !== undefined
+      ? Math.max(0, Number.parseInt(offset, 10) || 0)
+      : (safePage - 1) * safeLimit;
 
     // Determine order
     let orderBy = 'c.created_at DESC';
@@ -322,7 +403,30 @@ router.get('/', optionalAuth, (req, res) => {
       conditions.push("(c.title LIKE ? OR c.author LIKE ? OR IFNULL(c.translator, '') LIKE ?)");
       params.push(`%${search}%`, `%${search}%`, `%${search}%`);
     }
-    if (status) { conditions.push('c.status = ?'); params.push(status); }
+    if (status) {
+      const normalizedStatus = normalizeStatusFilter(status);
+      conditions.push('LOWER(c.status) = LOWER(?)');
+      params.push(normalizedStatus);
+    }
+
+    const loaiCondition = getLoaiCondition(loai);
+    if (loaiCondition) {
+      conditions.push(loaiCondition.clause);
+      params.push(...loaiCondition.params);
+    }
+
+    const chapterCondition = getChapterCountCondition(String(chapters || '').trim().toLowerCase());
+    if (chapterCondition) {
+      conditions.push(chapterCondition.clause);
+      params.push(...chapterCondition.params);
+    }
+
+    const minRating = Number.parseFloat(min_rating);
+    if (Number.isFinite(minRating) && minRating > 0) {
+      conditions.push('IFNULL((SELECT AVG(r.score) FROM ratings r WHERE r.comic_id = c.id), 0) >= ?');
+      params.push(minRating);
+    }
+
     if (conditions.length) query += ` WHERE ${conditions.join(' AND ')}`;
 
     // Count query (same conditions, no limit)
@@ -330,7 +434,7 @@ router.get('/', optionalAuth, (req, res) => {
     const total = db.prepare(countQuery).get(...params).cnt;
 
     query += ` ORDER BY ${orderBy} LIMIT ? OFFSET ?`;
-    params.push(parseInt(limit), off);
+    params.push(safeLimit, off);
 
     const comics = db.prepare(query).all(...params);
     res.json({ comics: enrichComicListBatch(comics, apiBaseUrl), total });

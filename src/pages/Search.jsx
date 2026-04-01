@@ -41,6 +41,10 @@ export default function Search() {
   const [searchInput, setSearchInput] = useState(queryParam);
   const [ratingLocal, setRatingLocal] = useState(ratingParam);
 
+  useEffect(() => {
+    setSearchInput(queryParam);
+  }, [queryParam]);
+
   // Load genres once
   useEffect(() => {
     getAdminGenres().then(r => setGenres(r.data)).catch(() => {});
@@ -53,6 +57,7 @@ export default function Search() {
     if (queryParam)  params.search   = queryParam;
     if (statusParam) params.status   = statusParam;
     if (genreParam)  params.genre    = genreParam;
+    if (loaiParam)   params.loai     = loaiParam;
     if (ratingParam) params.min_rating = ratingParam;
     if (chapParam)   params.chapters = chapParam;
 
@@ -60,7 +65,7 @@ export default function Search() {
       .then(r => { const d = r.data; setComics(d.comics || d); setTotal(d.total || 0); })
       .catch(() => setComics([]))
       .finally(() => setLoading(false));
-  }, [queryParam, sortParam, statusParam, genreParam, ratingParam, chapParam, pageParam]);
+  }, [queryParam, sortParam, statusParam, genreParam, loaiParam, ratingParam, chapParam, pageParam]);
 
   useEffect(() => { load(); }, [load]);
 

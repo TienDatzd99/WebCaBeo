@@ -2,7 +2,7 @@
   background: linear-gradient(90deg, #232323 0, #232323 10%, #413726 35%, #232323 60%, #232323 100%);
   min-height: 100vh;
   position: relative;
-  padding: 1.2rem 1rem 2.2rem;
+  padding: 0.8rem 1rem 2.2rem;
 }
 
 body.reading-guarded {
@@ -106,7 +106,7 @@ body.reading-guarded a {
   margin: 0;
   color: rgba(236,241,255,0.9);
   font-family: 'Inter', system-ui, sans-serif;
-  font-size: 1.02rem;
+  font-size: calc(1.02rem * var(--reading-font-scale, 1));
   line-height: 1.74;
   white-space: pre-line;
   word-wrap: break-word;

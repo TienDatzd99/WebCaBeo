@@ -1,6 +1,7 @@
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route, useLocation, matchPath } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext.jsx';
 import Header from './components/Header';
+import ReadingHeader from './components/ReadingHeader.jsx';
 import Footer from './components/Footer';
 import Home from './pages/Home';
 import ComicDetail from './pages/ComicDetail';
@@ -18,6 +19,13 @@ import AdminUsers     from './admin/AdminUsers.jsx';
 import AdminGenres    from './admin/AdminGenres.jsx';
 
 function App() {
+  const location = useLocation();
+  const readingMatch = matchPath('/read/:id/:chapterId', location.pathname);
+  const isReadingPage = Boolean(readingMatch);
+  const comicId = readingMatch?.params?.id;
+  const chapterId = readingMatch?.params?.chapterId;
+  const chapterLabel = chapterId ? `Chương ${chapterId}` : 'Đọc truyện';
+
   return (
     <AuthProvider>
       <Routes>
@@ -33,7 +41,7 @@ function App() {
         {/* ── Public routes ── */}
         <Route path="/*" element={
           <div style={{ display:'flex', flexDirection:'column', minHeight:'100vh' }}>
-            <Header />
+            {isReadingPage ? <ReadingHeader chapterLabel={chapterLabel} comicId={comicId} chapterId={chapterId} /> : <Header />}
             <main style={{ flex:1 }}>
               <Routes>
                 <Route path="/"                    element={<Home />} />
@@ -44,7 +52,7 @@ function App() {
                 <Route path="/search"              element={<Search />} />
               </Routes>
             </main>
-            <Footer />
+            {!isReadingPage && <Footer />}
           </div>
         } />
       </Routes>

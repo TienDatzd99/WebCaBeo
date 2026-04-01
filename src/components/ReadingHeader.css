@@ -1,0 +1,118 @@
+.reading-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.95);
+}
+
+.reading-header-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0.75rem 1rem;
+  background-color: #000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.reading-header-left {
+  min-width: 0;
+}
+
+.reading-header-logo-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+}
+
+.reading-header-logo {
+  width: 2rem;
+  height: 2rem;
+  object-fit: contain;
+}
+
+.reading-header-brand {
+  color: #fff;
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-family: 'Itim', 'Inter', system-ui, sans-serif;
+}
+
+.reading-header-center {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.reading-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.reading-header-icon-btn {
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.15s ease, color 0.15s ease;
+}
+
+.reading-header-icon-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #facc15;
+}
+
+.reading-header-icon-btn.active {
+  background: rgba(250, 204, 21, 0.2);
+  color: #facc15;
+}
+
+.reading-header-icon-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.icon-sun {
+  color: #facc15;
+}
+
+.hide-mobile {
+  display: none;
+}
+
+@media (min-width: 768px) {
+  .reading-header-inner {
+    padding: 0.75rem 1.25rem;
+  }
+
+  .reading-header-logo {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  .reading-header-brand {
+    font-size: 2rem;
+  }
+
+  .reading-header-center {
+    display: flex;
+  }
+
+  .hide-mobile {
+    display: inline-flex;
+  }
+}
