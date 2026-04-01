@@ -55,11 +55,11 @@ const ReadingHeader = ({ chapterLabel, comicId, chapterId }) => {
         if (chapterNumber !== undefined && chapterNumber !== null) {
           setDisplayChapterLabel(`Chương ${chapterNumber}`);
         } else {
-          setDisplayChapterLabel(chapterLabel || `Chương ${chapterId}`);
+          setDisplayChapterLabel(chapterLabel || 'Đọc truyện');
         }
       })
       .catch(() => {
-        setDisplayChapterLabel(chapterLabel || `Chương ${chapterId}`);
+        setDisplayChapterLabel(chapterLabel || 'Đọc truyện');
       });
   }, [chapterId, chapterLabel]);
 
@@ -175,7 +175,7 @@ const ReadingHeader = ({ chapterLabel, comicId, chapterId }) => {
           </button>
           <button
             type="button"
-            className={`reading-header-icon-btn hide-mobile ${showFontSlider ? 'active' : ''}`}
+            className={`reading-header-icon-btn ${showFontSlider ? 'active' : ''}`}
             aria-label="Tùy chỉnh kiểu chữ"
             onClick={() => setShowFontSlider((prev) => !prev)}
             title={`Cỡ chữ: ${fontPercent}%`}

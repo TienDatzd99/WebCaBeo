@@ -24,7 +24,7 @@ function App() {
   const isReadingPage = Boolean(readingMatch);
   const comicId = readingMatch?.params?.id;
   const chapterId = readingMatch?.params?.chapterId;
-  const chapterLabel = chapterId ? `Chương ${chapterId}` : 'Đọc truyện';
+  const chapterLabel = chapterId ? 'Đang tải chương...' : 'Đọc truyện';
 
   return (
     <AuthProvider>
