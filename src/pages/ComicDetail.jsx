@@ -30,6 +30,7 @@ export default function ComicDetail() {
   const { user }     = useAuth();
   const navigate     = useNavigate();
   const relRef       = useRef(null);
+  const heroBodyRef  = useRef(null);
 
   const [comic,    setComic]    = useState(null);
   const [chapters, setChapters] = useState([]);
@@ -82,6 +83,40 @@ export default function ComicDetail() {
       img.src = src;
     });
   }, [comic, related]);
+
+  useEffect(() => {
+    const node = heroBodyRef.current;
+    if (!node) return;
+
+    const MAX_DEPTH = 26;
+    let rafId = 0;
+
+    const updateParallax = () => {
+      rafId = 0;
+      const rect = node.getBoundingClientRect();
+      const viewport = window.innerHeight || 1;
+      const progressRaw = (viewport - rect.top) / (viewport + rect.height);
+      const progress = Math.min(1, Math.max(0, progressRaw));
+      const offset = (progress - 0.5) * 2 * MAX_DEPTH;
+      node.style.setProperty('--cd-cover-parallax', `${offset.toFixed(2)}px`);
+    };
+
+    const onScroll = () => {
+      if (rafId) return;
+      rafId = window.requestAnimationFrame(updateParallax);
+    };
+
+    updateParallax();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+
+    return () => {
+      if (rafId) window.cancelAnimationFrame(rafId);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+      node.style.setProperty('--cd-cover-parallax', '0px');
+    };
+  }, [id]);
 
   const toggleFav = async () => {
     if (!user) return navigate('/login');
@@ -170,7 +205,7 @@ export default function ComicDetail() {
         <div className="cd-hero-bg" style={{ backgroundImage: `url(${heroImage})` }} />
         <div className="cd-hero-veil" />
 
-        <div className="cd-hero-body">
+        <div className="cd-hero-body" ref={heroBodyRef}>
           {/* LEFT: cover */}
           <div className="cd-cover-col">
             <img
