@@ -1,7 +1,7 @@
 import express from 'express';
 import { Buffer } from 'node:buffer';
 import db from '../db.js';
-import { optionalAuth } from '../middleware/auth.js';
+import { authenticateToken, optionalAuth } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -444,6 +444,43 @@ router.get('/', optionalAuth, (req, res) => {
   }
 });
 
+// POST /api/comics/:id/recommend - toggle recommendation for current user
+router.post('/:id/recommend', authenticateToken, (req, res) => {
+  try {
+    const comicId = Number(req.params.id);
+    if (!Number.isFinite(comicId)) {
+      return res.status(400).json({ error: 'Invalid comic id' });
+    }
+
+    const comic = db.prepare('SELECT id FROM comics WHERE id = ?').get(comicId);
+    if (!comic) {
+      return res.status(404).json({ error: 'Comic not found' });
+    }
+
+    const existing = db
+      .prepare('SELECT 1 FROM recommendations WHERE user_id = ? AND comic_id = ?')
+      .get(req.user.id, comicId);
+
+    let recommended = false;
+    if (existing) {
+      db.prepare('DELETE FROM recommendations WHERE user_id = ? AND comic_id = ?').run(req.user.id, comicId);
+      recommended = false;
+    } else {
+      db.prepare('INSERT INTO recommendations (user_id, comic_id) VALUES (?, ?)').run(req.user.id, comicId);
+      recommended = true;
+    }
+
+    const recommendCount = db
+      .prepare('SELECT COUNT(*) as cnt FROM recommendations WHERE comic_id = ?')
+      .get(comicId).cnt;
+
+    return res.json({ recommended, recommendCount });
+  } catch (error) {
+    console.error('[/api/comics/:id/recommend] Error:', error.message);
+    return res.status(500).json({ error: 'Lỗi server: ' + error.message });
+  }
+});
+
 // GET /api/comics/:id
 router.get('/:id', optionalAuth, (req, res) => {
   try {
@@ -458,15 +495,20 @@ router.get('/:id', optionalAuth, (req, res) => {
 
     const enriched = enrichComic(comic, apiBaseUrl);
 
+    const favoriteCount = db.prepare('SELECT COUNT(*) as cnt FROM favorites WHERE comic_id = ?').get(comic.id).cnt;
+    const recommendCount = db.prepare('SELECT COUNT(*) as cnt FROM recommendations WHERE comic_id = ?').get(comic.id).cnt;
+
     let isFavorited = false;
+    let isRecommended = false;
     let userRating = null;
     if (req.user) {
       isFavorited = !!db.prepare('SELECT 1 FROM favorites WHERE user_id = ? AND comic_id = ?').get(req.user.id, comic.id);
+      isRecommended = !!db.prepare('SELECT 1 FROM recommendations WHERE user_id = ? AND comic_id = ?').get(req.user.id, comic.id);
       const ur = db.prepare('SELECT score FROM ratings WHERE user_id = ? AND comic_id = ?').get(req.user.id, comic.id);
       userRating = ur ? ur.score : null;
     }
 
-    res.json({ ...enriched, isFavorited, userRating });
+    res.json({ ...enriched, isFavorited, isRecommended, favoriteCount, recommendCount, userRating });
   } catch (error) {
     console.error('[/api/comics/:id] Error:', error.message);
     res.status(500).json({ error: 'Lỗi server: ' + error.message });

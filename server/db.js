@@ -117,6 +117,13 @@ db.exec(`
     PRIMARY KEY (user_id, comic_id)
   );
 
+  CREATE TABLE IF NOT EXISTS recommendations (
+    user_id     INTEGER REFERENCES users(id)  ON DELETE CASCADE,
+    comic_id    INTEGER REFERENCES comics(id) ON DELETE CASCADE,
+    created_at  TEXT DEFAULT (datetime('now')),
+    PRIMARY KEY (user_id, comic_id)
+  );
+
   CREATE TABLE IF NOT EXISTS reading_history (
     user_id    INTEGER REFERENCES users(id)     ON DELETE CASCADE,
     comic_id   INTEGER REFERENCES comics(id)    ON DELETE CASCADE,
@@ -178,6 +185,7 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_chapters_comic_id_number ON chapters(comic_id, number DESC);
 
   CREATE INDEX IF NOT EXISTS idx_favorites_comic_id ON favorites(comic_id);
+  CREATE INDEX IF NOT EXISTS idx_recommendations_comic_id ON recommendations(comic_id);
   CREATE INDEX IF NOT EXISTS idx_ratings_comic_id ON ratings(comic_id);
   CREATE INDEX IF NOT EXISTS idx_reviews_comic_id_created_at ON reviews(comic_id, created_at DESC);
 

@@ -6,7 +6,7 @@ import {
   FiChevronLeft, FiChevronRight
 } from 'react-icons/fi';
 import { getComics, getComic, getComicChapters, invalidateComicCache, prefetchComicDetail, prefetchHomeData } from '../api/comics.js';
-import { toggleFavorite, rateComic } from '../api/auth.js';
+import { toggleFavorite, toggleRecommend, rateComic } from '../api/auth.js';
 import { getComicReviews, submitComicReview } from '../api/ratings.js';
 import { useAuth } from '../context/AuthContext.jsx';
 import './ComicDetail.css';
@@ -36,6 +36,7 @@ export default function ComicDetail() {
   const [related,  setRelated]  = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [faved,    setFaved]    = useState(false);
+  const [recommended, setRecommended] = useState(false);
   const [myRating, setMyRating] = useState(0);
   const [hov,      setHov]      = useState(0);
   /* review form */
@@ -51,6 +52,7 @@ export default function ComicDetail() {
       .then(([c, ch, rel, rv]) => {
         setComic(c.data);
         setFaved(c.data.isFavorited || false);
+        setRecommended(c.data.isRecommended || false);
         setMyRating(c.data.userRating || 0);
         setChapters(ch.data);
         setRelated((rel.data.comics || rel.data).filter(x => String(x.id) !== String(id)));
@@ -84,10 +86,35 @@ export default function ComicDetail() {
   }, [comic, related]);
 
   const toggleFav = async () => {
-    if (!user) return navigate('/login');
-    const r = await toggleFavorite(id);
-    setFaved(r.data.favorited);
-    invalidateComicCache(id);
+    try {
+      if (!user) return navigate('/login');
+      const r = await toggleFavorite(id);
+      const nextFavorited = Boolean(r?.data?.favorited);
+      setFaved(nextFavorited);
+      setComic((prev) => {
+        if (!prev) return prev;
+        const current = Number(prev.favoriteCount || 0);
+        const nextCount = nextFavorited ? current + 1 : Math.max(0, current - 1);
+        return { ...prev, favoriteCount: nextCount };
+      });
+      invalidateComicCache(id);
+    } catch {
+      window.alert('Không thể cập nhật yêu thích lúc này. Vui lòng thử lại.');
+    }
+  };
+
+  const toggleRec = async () => {
+    try {
+      if (!user) return navigate('/login');
+      const r = await toggleRecommend(id);
+      const nextRecommended = Boolean(r?.data?.recommended);
+      const nextCount = Number(r?.data?.recommendCount || 0);
+      setRecommended(nextRecommended);
+      setComic((prev) => (prev ? { ...prev, recommendCount: nextCount } : prev));
+      invalidateComicCache(id);
+    } catch {
+      window.alert('Không thể cập nhật đề cử lúc này. Vui lòng thử lại.');
+    }
   };
 
   const handleRate = async (score) => {
@@ -225,7 +252,7 @@ export default function ComicDetail() {
               <button className={`cd-btn-glass ${faved ? 'faved' : ''}`} onClick={toggleFav}>
                 <FiHeart size={14}/> Yêu thích
               </button>
-              <button className="cd-btn-glass">
+              <button className={`cd-btn-glass ${recommended ? 'faved' : ''}`} onClick={toggleRec}>
                 <FiBookmark size={14}/> Đề cử
               </button>
             </div>
@@ -238,9 +265,9 @@ export default function ComicDetail() {
             <div className="cd-stats-bar">
               <div className="cd-stat"><span className="s-val">{comic.views?.toLocaleString() ?? 0}</span><span className="s-lbl">Lượt xem</span></div>
               <div className="sd"/>
-              <div className="cd-stat"><span className="s-val">0</span><span className="s-lbl">Yêu thích</span></div>
+              <div className="cd-stat"><span className="s-val">{Number(comic.favoriteCount || 0).toLocaleString()}</span><span className="s-lbl">Yêu thích</span></div>
               <div className="sd"/>
-              <div className="cd-stat"><span className="s-val">0</span><span className="s-lbl">Đề cử</span></div>
+              <div className="cd-stat"><span className="s-val">{Number(comic.recommendCount || 0).toLocaleString()}</span><span className="s-lbl">Đề cử</span></div>
               <div className="sd"/>
               <div className="cd-stat"><span className="s-val">{lastDate}</span><span className="s-lbl">Lần cập nhật cuối</span></div>
             </div>
