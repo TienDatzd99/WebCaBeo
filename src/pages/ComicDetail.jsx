@@ -30,8 +30,6 @@ export default function ComicDetail() {
   const { user }     = useAuth();
   const navigate     = useNavigate();
   const relRef       = useRef(null);
-  const heroBodyRef  = useRef(null);
-  const coverRef     = useRef(null);
 
   const [comic,    setComic]    = useState(null);
   const [chapters, setChapters] = useState([]);
@@ -84,43 +82,6 @@ export default function ComicDetail() {
       img.src = src;
     });
   }, [comic, related]);
-
-  useEffect(() => {
-    const heroNode = heroBodyRef.current;
-    const coverNode = coverRef.current;
-    if (!heroNode || !coverNode) return;
-
-    const MAX_DEPTH = 42;
-    let rafId = 0;
-
-    const updateParallax = () => {
-      rafId = 0;
-      const rect = heroNode.getBoundingClientRect();
-      const viewport = window.innerHeight || 1;
-      const heroCenter = rect.top + rect.height / 2;
-      const viewportCenter = viewport / 2;
-      const distance = viewportCenter - heroCenter;
-      const rawOffset = distance * 0.22;
-      const offset = Math.max(-MAX_DEPTH, Math.min(MAX_DEPTH, rawOffset));
-      coverNode.style.transform = `translateY(${offset.toFixed(2)}px)`;
-    };
-
-    const onScroll = () => {
-      if (rafId) return;
-      rafId = window.requestAnimationFrame(updateParallax);
-    };
-
-    updateParallax();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-
-    return () => {
-      if (rafId) window.cancelAnimationFrame(rafId);
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
-      coverNode.style.transform = 'translateY(0px)';
-    };
-  }, [id]);
 
   const toggleFav = async () => {
     if (!user) return navigate('/login');
@@ -209,14 +170,13 @@ export default function ComicDetail() {
         <div className="cd-hero-bg" style={{ backgroundImage: `url(${heroImage})` }} />
         <div className="cd-hero-veil" />
 
-        <div className="cd-hero-body" ref={heroBodyRef}>
+        <div className="cd-hero-body">
           {/* LEFT: cover */}
           <div className="cd-cover-col">
             <img
               src={coverImage}
               alt={comic.title}
               className="cd-cover"
-              ref={coverRef}
               onError={(e) => {
                 e.currentTarget.src = FALLBACK_COVER;
               }}

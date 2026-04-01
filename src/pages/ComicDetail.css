@@ -23,7 +23,7 @@
 ─────────────────────────────────────────────── */
 .cd-hero {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   width: min(1220px, 96vw);
   margin: 0 auto;
   border-radius: 0;
@@ -64,7 +64,7 @@
 .cd-cover-col {
   width: 100%;
   position: sticky;
-  top: 14px;
+  top: 88px;
   align-self: start;
 }
 
@@ -75,9 +75,6 @@
   border-radius: 6px;
   border: 1px solid rgba(255,255,255,0.11);
   box-shadow: 0 10px 28px rgba(0,0,0,0.45);
-  transform: translateY(0px);
-  transition: transform 0.04s linear;
-  will-change: transform;
 }
 
 /* ── Meta (right of cover) ── */
