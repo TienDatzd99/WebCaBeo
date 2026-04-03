@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import api from '../api';
+import { useAuth } from '../context/AuthContext.jsx';
 import './Info.css';
 
 function formatSubscribers(value) {
@@ -44,18 +45,22 @@ function VideoBox({ title, video, featured = false }) {
 }
 
 export default function Info() {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [payload, setPayload] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function load() {
+    async function load(forceRefresh = false) {
       setLoading(true);
       setError('');
       try {
-        const { data } = await api.get('/youtube/info');
+        const { data } = await api.get('/youtube/info', {
+          params: forceRefresh ? { refresh: 1 } : undefined,
+        });
         if (!cancelled) {
           setPayload(data);
         }
@@ -76,6 +81,20 @@ export default function Info() {
       cancelled = true;
     };
   }, []);
+
+  const handleRefreshNow = async () => {
+    setRefreshing(true);
+    setError('');
+    try {
+      const { data } = await api.get('/youtube/info', { params: { refresh: 1 } });
+      setPayload(data);
+    } catch (err) {
+      const message = err?.response?.data?.details || err?.response?.data?.error || err.message || 'Không cập nhật được dữ liệu YouTube';
+      setError(message);
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   const latestVideos = useMemo(() => payload?.videos?.latest || [], [payload]);
   const mostViewedVideo = useMemo(() => payload?.videos?.mostViewed || null, [payload]);
@@ -105,6 +124,12 @@ export default function Info() {
               {loading ? 'Đang tải người đăng ký...' : `${formatSubscribers(payload?.channel?.subscriberCount)} người đăng ký`}
             </p>
 
+            {payload?.meta?.cacheFallback && (
+              <p className="info-error">
+                Đang hiển thị dữ liệu cache vì quota YouTube đã hết. Dữ liệu có thể chưa phải bản mới nhất.
+              </p>
+            )}
+
             <a
               className="info-subscribe-btn"
               href={payload?.channel?.subscribeUrl || 'https://www.youtube.com'}
@@ -113,6 +138,18 @@ export default function Info() {
             >
               Đăng ký
             </a>
+
+            {user?.role === 'admin' && (
+              <button
+                type="button"
+                className="info-subscribe-btn"
+                onClick={handleRefreshNow}
+                disabled={refreshing || loading}
+                style={{ marginTop: '10px' }}
+              >
+                {refreshing ? 'Đang cập nhật...' : 'Cập nhật ngay'}
+              </button>
+            )}
 
             {error && <p className="info-error">{error}</p>}
           </div>

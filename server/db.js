@@ -2,6 +2,7 @@ import Database from 'better-sqlite3';
 import bcrypt from 'bcryptjs';
 import fs from 'fs';
 import path from 'path';
+import process from 'node:process';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -175,6 +176,12 @@ db.exec(`
     updated_at TEXT DEFAULT (datetime('now'))
   );
 
+  CREATE TABLE IF NOT EXISTS youtube_cache (
+    cache_key TEXT PRIMARY KEY,
+    payload   TEXT NOT NULL,
+    cached_at INTEGER NOT NULL
+  );
+
   CREATE INDEX IF NOT EXISTS idx_comics_created_at ON comics(created_at);
   CREATE INDEX IF NOT EXISTS idx_comics_views ON comics(views DESC);
   CREATE INDEX IF NOT EXISTS idx_comics_status ON comics(status);
@@ -190,6 +197,7 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_reviews_comic_id_created_at ON reviews(comic_id, created_at DESC);
 
   CREATE INDEX IF NOT EXISTS idx_home_sliders_active_order ON home_sliders(is_active, sort_order, id);
+  CREATE INDEX IF NOT EXISTS idx_youtube_cache_cached_at ON youtube_cache(cached_at);
 `);
 
 // Lightweight migration for existing databases created before new columns were added.
