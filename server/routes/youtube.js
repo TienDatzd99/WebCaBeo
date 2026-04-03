@@ -203,11 +203,33 @@ async function fetchYouTubeInfo({ apiKey, channelId, channelHandle, envChannelUr
       .slice(0, 2);
 
     latest = latestVideos;
-    mostViewed = latestVideos.reduce((best, current) => {
-      if (!current) return best;
-      if (!best) return current;
-      return current.viewCount > best.viewCount ? current : best;
-    }, null);
+  }
+
+  const topViewData = await fetchYouTube('search', {
+    part: 'snippet',
+    channelId: resolvedChannelId,
+    order: 'viewCount',
+    type: 'video',
+    maxResults: '10',
+    key: apiKey,
+  });
+
+  const topViewCandidates = (topViewData?.items || [])
+    .map((item) => item.id?.videoId)
+    .filter(Boolean);
+
+  const mostViewedId = topViewCandidates.find((id) => !latest.some((video) => video.id === id))
+    || topViewCandidates[0]
+    || null;
+
+  if (mostViewedId) {
+    const mostViewedData = await fetchYouTube('videos', {
+      part: 'snippet,statistics',
+      id: mostViewedId,
+      key: apiKey,
+    });
+
+    mostViewed = mapVideo(mostViewedData?.items?.[0] || null);
   }
 
   return buildYouTubePayload({
