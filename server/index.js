@@ -16,6 +16,7 @@ import ratingsRouter   from './routes/ratings.js';
 import historyRouter   from './routes/history.js';
 import adminRouter     from './routes/admin.js';
 import adsRouter       from './routes/ads.js';
+import youtubeRouter   from './routes/youtube.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -67,6 +68,7 @@ app.use('/api/ratings',   ratingsRouter);
 app.use('/api/history',   historyRouter);
 app.use('/api/admin',     adminRouter);
 app.use('/api/ads',       adsRouter);
+app.use('/api/youtube',   youtubeRouter);
 
 // Health check
 app.get('/api/health', (_, res) => {

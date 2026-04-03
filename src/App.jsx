@@ -9,6 +9,7 @@ import Reading from './pages/Reading';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Search from './pages/Search.jsx';
+import Info from './pages/Info.jsx';
 
 /* Admin */
 import AdminLayout    from './admin/AdminLayout.jsx';
@@ -50,6 +51,7 @@ function App() {
                 <Route path="/login"               element={<Login />} />
                 <Route path="/register"            element={<Register />} />
                 <Route path="/search"              element={<Search />} />
+                <Route path="/info"                element={<Info />} />
               </Routes>
             </main>
             {!isReadingPage && <Footer />}
