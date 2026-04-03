@@ -117,10 +117,8 @@ export default function Info() {
         </aside>
 
         <div className="info-videos-area">
-          <div className="info-videos-top-row">
-            <VideoBox title="Video mới nhất #1" video={latestVideos[0]} />
-            <VideoBox title="Video mới nhất #2" video={latestVideos[1]} />
-          </div>
+          <VideoBox title="Video mới nhất #1" video={latestVideos[0]} />
+          <VideoBox title="Video mới nhất #2" video={latestVideos[1]} />
           <VideoBox title="Video nhiều lượt xem nhất" video={mostViewedVideo} featured />
         </div>
       </div>
