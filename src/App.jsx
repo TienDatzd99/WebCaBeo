@@ -22,6 +22,7 @@ import AdminGenres    from './admin/AdminGenres.jsx';
 function App() {
   const location = useLocation();
   const readingMatch = matchPath('/read/:id/:chapterId', location.pathname);
+  const isInfoPage = matchPath('/info', location.pathname);
   const isReadingPage = Boolean(readingMatch);
   const comicId = readingMatch?.params?.id;
   const chapterId = readingMatch?.params?.chapterId;
@@ -42,7 +43,9 @@ function App() {
         {/* ── Public routes ── */}
         <Route path="/*" element={
           <div style={{ display:'flex', flexDirection:'column', minHeight:'100vh' }}>
-            {isReadingPage ? <ReadingHeader chapterLabel={chapterLabel} comicId={comicId} chapterId={chapterId} /> : <Header />}
+            {isReadingPage ? (
+              <ReadingHeader chapterLabel={chapterLabel} comicId={comicId} chapterId={chapterId} />
+            ) : (!isInfoPage && <Header />)}
             <main style={{ flex:1 }}>
               <Routes>
                 <Route path="/"                    element={<Home />} />
@@ -54,7 +57,7 @@ function App() {
                 <Route path="/info"                element={<Info />} />
               </Routes>
             </main>
-            {!isReadingPage && <Footer />}
+            {!isReadingPage && !isInfoPage && <Footer />}
           </div>
         } />
       </Routes>

@@ -19,7 +19,7 @@ function YouTubeLogo() {
   );
 }
 
-function VideoBox({ title, video }) {
+function VideoBox({ title, video, featured = false }) {
   if (!video) {
     return (
       <div className="info-video-box is-empty">
@@ -29,16 +29,12 @@ function VideoBox({ title, video }) {
   }
 
   return (
-    <article className="info-video-box">
+    <article className={`info-video-box${featured ? ' is-featured' : ''}`}>
       <div className="info-video-title">{title}</div>
-      <iframe
-        src={video.embedUrl}
-        title={video.title}
-        loading="lazy"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-        referrerPolicy="strict-origin-when-cross-origin"
-        allowFullScreen
-      />
+      <a className="info-video-preview" href={video.url} target="_blank" rel="noreferrer" aria-label={`Mở video ${video.title}`}>
+        <img src={video.thumbnail} alt={video.title} className="info-video-thumb" loading="lazy" />
+        <span className="info-play-badge">▶</span>
+      </a>
       <div className="info-video-meta">
         <a href={video.url} target="_blank" rel="noreferrer">{video.title}</a>
         <span>{formatViews(video.viewCount)}</span>
@@ -95,7 +91,11 @@ export default function Info() {
             rel="noreferrer"
             aria-label="Mở kênh YouTube"
           >
-            <YouTubeLogo />
+            {payload?.channel?.avatar ? (
+              <img src={payload.channel.avatar} alt={payload?.channel?.title || 'Kênh YouTube'} className="info-channel-avatar" loading="lazy" />
+            ) : (
+              <YouTubeLogo />
+            )}
           </a>
 
           <h1>{payload?.channel?.title || 'Kênh YouTube'}</h1>
@@ -121,7 +121,7 @@ export default function Info() {
             <VideoBox title="Video mới nhất #1" video={latestVideos[0]} />
             <VideoBox title="Video mới nhất #2" video={latestVideos[1]} />
           </div>
-          <VideoBox title="Video nhiều lượt xem nhất" video={mostViewedVideo} />
+          <VideoBox title="Video nhiều lượt xem nhất" video={mostViewedVideo} featured />
         </div>
       </div>
     </section>

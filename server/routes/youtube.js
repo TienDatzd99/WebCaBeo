@@ -169,6 +169,10 @@ router.get('/info', async (_req, res) => {
       channel: {
         id: channelId,
         title: channel.snippet?.title || 'YouTube Channel',
+        avatar: channel.snippet?.thumbnails?.high?.url
+          || channel.snippet?.thumbnails?.medium?.url
+          || channel.snippet?.thumbnails?.default?.url
+          || null,
         url: channelUrl,
         subscribeUrl: `https://www.youtube.com/channel/${channelId}?sub_confirmation=1`,
         subscriberCount: toNumber(channel.statistics?.subscriberCount, 0),
