@@ -226,6 +226,7 @@
 
   .info-videos-area {
     max-width: 620px;
+    align-self: center;
   }
 }
 
