@@ -98,22 +98,24 @@ export default function Info() {
             )}
           </a>
 
-          <h1>{payload?.channel?.title || 'Kênh YouTube'}</h1>
+          <div className="info-channel-meta">
+            <h1>{payload?.channel?.title || 'Kênh YouTube'}</h1>
 
-          <p className="info-subscribers">
-            {loading ? 'Đang tải người đăng ký...' : `${formatSubscribers(payload?.channel?.subscriberCount)} người đăng ký`}
-          </p>
+            <p className="info-subscribers">
+              {loading ? 'Đang tải người đăng ký...' : `${formatSubscribers(payload?.channel?.subscriberCount)} người đăng ký`}
+            </p>
 
-          <a
-            className="info-subscribe-btn"
-            href={payload?.channel?.subscribeUrl || 'https://www.youtube.com'}
-            target="_blank"
-            rel="noreferrer"
-          >
-            Đăng ký
-          </a>
+            <a
+              className="info-subscribe-btn"
+              href={payload?.channel?.subscribeUrl || 'https://www.youtube.com'}
+              target="_blank"
+              rel="noreferrer"
+            >
+              Đăng ký
+            </a>
 
-          {error && <p className="info-error">{error}</p>}
+            {error && <p className="info-error">{error}</p>}
+          </div>
         </aside>
 
         <div className="info-videos-area">
