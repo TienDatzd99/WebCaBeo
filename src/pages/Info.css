@@ -97,6 +97,8 @@
   grid-template-columns: 1fr;
   gap: 10px;
   max-width: none;
+  justify-self: center;
+  width: 100%;
 }
 
 .info-video-box {
@@ -128,14 +130,13 @@
 
 .info-video-thumb {
   width: 100%;
-  height: auto;
-  aspect-ratio: 16 / 9;
+  height: 126px;
   object-fit: cover;
   display: block;
 }
 
 .info-video-box.is-featured .info-video-thumb {
-  aspect-ratio: 16 / 9;
+  height: 138px;
 }
 
 .info-play-badge {
@@ -180,9 +181,10 @@
   }
 
   .info-wrap {
-    width: min(1220px, 100%);
-    grid-template-columns: 300px 1fr;
+    width: min(980px, 100%);
+    grid-template-columns: 240px minmax(0, 620px);
     gap: 20px;
+    justify-content: center;
   }
 
   .info-channel-card {
@@ -223,7 +225,43 @@
   }
 
   .info-videos-area {
-    max-width: 860px;
+    max-width: 620px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .info-videos-area {
+    gap: 14px;
+  }
+
+  .info-video-box {
+    border: 0;
+    background: transparent;
+    border-radius: 0;
+    overflow: visible;
+  }
+
+  .info-video-title {
+    padding: 0 2px 6px;
+    border-bottom: 0;
+  }
+
+  .info-video-preview {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .info-video-thumb {
+    height: clamp(140px, 16vh, 190px);
+  }
+
+  .info-video-box.is-featured .info-video-thumb {
+    height: clamp(150px, 17vh, 205px);
+  }
+
+  .info-video-meta {
+    padding: 6px 2px 0;
   }
 }
 
