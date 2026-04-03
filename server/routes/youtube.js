@@ -7,7 +7,7 @@ const router = express.Router();
 
 const YOUTUBE_API_BASE = 'https://www.googleapis.com/youtube/v3';
 const YOUTUBE_CACHE_KEY = 'youtube_info';
-const YOUTUBE_CACHE_TTL_MS = 30 * 60 * 1000;
+const YOUTUBE_CACHE_TTL_MS = 2 * 60 * 60 * 1000;
 const YOUTUBE_CACHE_STALE_TTL_MS = 24 * 60 * 60 * 1000;
 
 let inFlightRefresh = null;
