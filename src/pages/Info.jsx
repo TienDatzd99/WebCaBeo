@@ -31,14 +31,16 @@ function VideoBox({ title, video, featured = false }) {
 
   return (
     <article className={`info-video-box${featured ? ' is-featured' : ''}`}>
-      <div className="info-video-title">{title}</div>
-      <a className="info-video-preview" href={video.url} target="_blank" rel="noreferrer" aria-label={`Mở video ${video.title}`}>
-        <img src={video.thumbnail} alt={video.title} className="info-video-thumb" loading="lazy" />
-        <span className="info-play-badge">▶</span>
-      </a>
-      <div className="info-video-meta">
-        <a href={video.url} target="_blank" rel="noreferrer">{video.title}</a>
-        <span>{formatViews(video.viewCount)}</span>
+      <div className="info-video-content">
+        <a className="info-video-preview" href={video.url} target="_blank" rel="noreferrer" aria-label={`Mở video ${video.title}`}>
+          <img src={video.thumbnail} alt={video.title} className="info-video-thumb" loading="lazy" />
+          <span className="info-play-badge">▶</span>
+        </a>
+        <div className="info-video-meta">
+          <div className="info-video-title">{title}</div>
+          <a href={video.url} target="_blank" rel="noreferrer">{video.title}</a>
+          <span>{formatViews(video.viewCount)}</span>
+        </div>
       </div>
     </article>
   );
