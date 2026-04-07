@@ -189,9 +189,9 @@
 
 @media (min-width: 680px) {
   .info-video-content {
-    grid-template-columns: minmax(300px, 56%) minmax(260px, 44%);
+    grid-template-columns: minmax(360px, 60%) minmax(320px, 40%);
     align-items: start;
-    gap: 16px;
+    gap: 18px;
   }
 }
 
@@ -201,9 +201,9 @@
   }
 
   .info-wrap {
-    width: min(980px, 100%);
-    grid-template-columns: 240px minmax(0, 620px);
-    gap: 20px;
+    width: min(1260px, 100%);
+    grid-template-columns: 270px minmax(0, 900px);
+    gap: 26px;
     justify-content: center;
   }
 
@@ -245,7 +245,7 @@
   }
 
   .info-videos-area {
-    max-width: 680px;
+    max-width: 900px;
     align-self: center;
   }
 }
@@ -264,6 +264,19 @@
 
   .info-video-meta {
     padding: 2px 2px 0;
+  }
+
+  .info-video-title {
+    font-size: 1.02rem;
+  }
+
+  .info-video-meta a {
+    font-size: 1.18rem;
+    line-height: 1.35;
+  }
+
+  .info-video-meta span {
+    font-size: 1.02rem;
   }
 }
 
