@@ -178,10 +178,8 @@
   font-size: 0.95rem;
   color: var(--text-primary);
   line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  display: block;
+  overflow-wrap: anywhere;
 }
 
 .info-video-meta span {
@@ -191,9 +189,9 @@
 
 @media (min-width: 680px) {
   .info-video-content {
-    grid-template-columns: minmax(0, 62%) minmax(0, 1fr);
+    grid-template-columns: minmax(300px, 56%) minmax(260px, 44%);
     align-items: start;
-    gap: 12px;
+    gap: 16px;
   }
 }
 
@@ -247,7 +245,7 @@
   }
 
   .info-videos-area {
-    max-width: 500px;
+    max-width: 680px;
     align-self: center;
   }
 }
