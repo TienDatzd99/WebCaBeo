@@ -60,7 +60,7 @@ export default function Info() {
       setLoading(true);
       setError('');
       try {
-        const { data } = await api.get('/youtube/info', {
+        const { data } = await api.get('/youtube/new', {
           params: forceRefresh ? { refresh: 1 } : undefined,
         });
         if (!cancelled) {
@@ -88,7 +88,7 @@ export default function Info() {
     setRefreshing(true);
     setError('');
     try {
-      const { data } = await api.get('/youtube/info', { params: { refresh: 1 } });
+      const { data } = await api.get('/youtube/new', { params: { refresh: 1 } });
       setPayload(data);
     } catch (err) {
       const message = err?.response?.data?.details || err?.response?.data?.error || err.message || 'Không cập nhật được dữ liệu YouTube';

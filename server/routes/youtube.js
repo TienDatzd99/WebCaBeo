@@ -248,7 +248,7 @@ function isQuotaExceeded(error) {
   return error?.status === 403 && error?.reason === 'quotaExceeded';
 }
 
-router.get('/info', optionalAuth, async (req, res) => {
+router.get('/new', optionalAuth, async (req, res) => {
   const forceRefresh = ['1', 'true', 'yes'].includes(String(req.query?.refresh || '').trim().toLowerCase());
   const envChannelId = process.env.YOUTUBE_CHANNEL_ID;
   const envChannelHandle = normalizeHandle(process.env.YOUTUBE_CHANNEL_HANDLE);
@@ -299,7 +299,7 @@ router.get('/info', optionalAuth, async (req, res) => {
     const cached = getCachedYouTubeInfo();
 
     if (cached?.payload && (Date.now() - cached.cachedAt) < YOUTUBE_CACHE_STALE_TTL_MS) {
-      console.warn('[/api/youtube/info] quota or upstream failure, serving cached payload:', error.message);
+      console.warn('[/api/youtube/new] quota or upstream failure, serving cached payload:', error.message);
       return res.status(200).json({
         ...cached.payload,
         meta: {
@@ -311,7 +311,7 @@ router.get('/info', optionalAuth, async (req, res) => {
       });
     }
 
-    console.error('[/api/youtube/info] error:', error.message);
+    console.error('[/api/youtube/new] error:', error.message);
 
     if (isQuotaExceeded(error)) {
       return res.status(429).json({

@@ -22,7 +22,7 @@ import AdminGenres    from './admin/AdminGenres.jsx';
 function App() {
   const location = useLocation();
   const readingMatch = matchPath('/read/:id/:chapterId', location.pathname);
-  const isInfoPage = matchPath('/info', location.pathname);
+  const isInfoPage = matchPath('/new', location.pathname);
   const isReadingPage = Boolean(readingMatch);
   const comicId = readingMatch?.params?.id;
   const chapterId = readingMatch?.params?.chapterId;
@@ -54,7 +54,7 @@ function App() {
                 <Route path="/login"               element={<Login />} />
                 <Route path="/register"            element={<Register />} />
                 <Route path="/search"              element={<Search />} />
-                <Route path="/info"                element={<Info />} />
+                <Route path="/new"                element={<Info />} />
               </Routes>
             </main>
             {!isReadingPage && !isInfoPage && <Footer />}
