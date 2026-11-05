@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import api from '../api';
 import { useAuth } from '../context/AuthContext.jsx';
+import { openYouTube } from '../utils/openYouTube.js';
 import './Info.css';
 
 function formatSubscribers(value) {
@@ -52,6 +53,16 @@ export default function Info() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [payload, setPayload] = useState(null);
+  const youtubeCleanup = useRef(null);
+
+  useEffect(() => () => youtubeCleanup.current?.(), []);
+
+  const handleYouTubeClick = (event) => {
+    const link = event.target.closest('a[href]');
+    if (!link) return;
+    youtubeCleanup.current?.();
+    youtubeCleanup.current = openYouTube(link.href, event);
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -102,7 +113,7 @@ export default function Info() {
   const mostViewedVideo = useMemo(() => payload?.videos?.mostViewed || null, [payload]);
 
   return (
-    <section className="info-page">
+    <section className="info-page" onClick={handleYouTubeClick}>
       <div className="info-wrap">
         <aside className="info-channel-card">
           <a
