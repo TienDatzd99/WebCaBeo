@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { openYouTube } from '../src/utils/openYouTube.js';
+import { getYouTubeLinks, openYouTube } from '../src/utils/openYouTube.js';
 
 function setup(userAgent, extraNavigator = {}) {
   const document = new EventTarget();
@@ -104,4 +104,30 @@ test('a synchronous app navigation error falls back immediately', () => {
   openYouTube(video, s.event, s.browser);
   assert.deepEqual(s.destinations, [video]);
   assert.equal(s.timers.size, 0);
+});
+
+test('native iOS anchor keeps its default action and offers help without forcing web navigation', () => {
+  const s = setup('iPhone TikTok');
+  const { appUrl } = getYouTubeLinks(video, s.browser);
+  s.event.currentTarget = { getAttribute: () => appUrl };
+  const blocked = [];
+  openYouTube(video, s.event, s.browser, (url) => blocked.push(url));
+  assert.equal(s.event.defaultPrevented, false);
+  assert.deepEqual(s.destinations, []);
+  s.runTimers();
+  assert.deepEqual(blocked, [video]);
+  assert.deepEqual(s.destinations, []);
+});
+
+test('native anchor successful app switch cancels the blocked message', () => {
+  const s = setup('iPhone TikTok');
+  const { appUrl } = getYouTubeLinks(video, s.browser);
+  s.event.currentTarget = { getAttribute: () => appUrl };
+  const blocked = [];
+  openYouTube(video, s.event, s.browser, (url) => blocked.push(url));
+  s.browser.document.visibilityState = 'hidden';
+  s.browser.document.dispatchEvent(new Event('visibilitychange'));
+  s.browser.document.visibilityState = 'visible';
+  s.runTimers();
+  assert.deepEqual(blocked, []);
 });

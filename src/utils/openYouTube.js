@@ -1,7 +1,4 @@
-// Called synchronously from a click so the browser retains the user gesture.
-export function openYouTube(href, event, browser = window) {
-  if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
-
+export function getYouTubeLinks(href, browser = window) {
   let url;
   try {
     url = new URL(href);
@@ -11,7 +8,7 @@ export function openYouTube(href, event, browser = window) {
   if (!['http:', 'https:'].includes(url.protocol)
     || !['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'].includes(url.hostname)) return;
 
-  const { navigator, document } = browser;
+  const { navigator } = browser;
   const isAndroid = /Android/i.test(navigator.userAgent);
   const isIOS = /iPad|iPhone|iPod/i.test(navigator.userAgent)
     || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
@@ -33,7 +30,19 @@ export function openYouTube(href, event, browser = window) {
     ? `intent://${destination}#Intent;scheme=https;package=com.google.android.youtube;S.browser_fallback_url=${encodeURIComponent(webUrl)};end;`
     : `youtube://${destination}`;
 
-  event.preventDefault();
+  return { appUrl, webUrl };
+}
+
+// Prefer the anchor's native action, retaining a direct user gesture on iOS.
+export function openYouTube(href, event, browser = window, onBlocked) {
+  if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  const links = getYouTubeLinks(href, browser);
+  if (!links) return;
+  const { appUrl, webUrl } = links;
+  const { document } = browser;
+  const nativeLink = event.currentTarget?.getAttribute('href') === appUrl;
+
+  if (!nativeLink) event.preventDefault();
   const cleanup = () => {
     browser.clearTimeout(timer);
     document.removeEventListener('visibilitychange', onVisibilityChange);
@@ -44,15 +53,19 @@ export function openYouTube(href, event, browser = window) {
   };
   const timer = browser.setTimeout(() => {
     cleanup();
-    if (document.visibilityState !== 'hidden') browser.location.assign(webUrl);
+    if (document.visibilityState !== 'hidden') {
+      if (onBlocked) onBlocked(webUrl);
+      else browser.location.assign(webUrl);
+    }
   }, 1800);
   document.addEventListener('visibilitychange', onVisibilityChange);
   browser.addEventListener('pagehide', cleanup);
   try {
-    browser.location.assign(appUrl);
+    if (!nativeLink) browser.location.assign(appUrl);
   } catch {
     cleanup();
-    browser.location.assign(webUrl);
+    if (onBlocked) onBlocked(webUrl);
+    else browser.location.assign(webUrl);
   }
   return cleanup;
 }
