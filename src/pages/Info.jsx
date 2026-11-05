@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import api from '../api';
 import { useAuth } from '../context/AuthContext.jsx';
-import { getYouTubeLinks, openYouTube } from '../utils/openYouTube.js';
 import './Info.css';
 
 function formatSubscribers(value) {
@@ -21,27 +20,7 @@ function YouTubeLogo() {
   );
 }
 
-function YouTubeLink({ href, onBlocked, children, ...props }) {
-  const cleanup = useRef(null);
-  useEffect(() => () => cleanup.current?.(), []);
-  const links = getYouTubeLinks(href);
-  return (
-    <a
-      {...props}
-      href={links?.appUrl || href}
-      target={links ? '_self' : '_blank'}
-      rel="noreferrer"
-      onClick={(event) => {
-        cleanup.current?.();
-        cleanup.current = openYouTube(href, event, window, onBlocked);
-      }}
-    >
-      {children}
-    </a>
-  );
-}
-
-function VideoBox({ title, video, featured = false, onBlocked }) {
+function VideoBox({ title, video, featured = false }) {
   if (!video) {
     return (
       <div className="info-video-box is-empty">
@@ -53,13 +32,13 @@ function VideoBox({ title, video, featured = false, onBlocked }) {
   return (
     <article className={`info-video-box${featured ? ' is-featured' : ''}`}>
       <div className="info-video-content">
-        <YouTubeLink className="info-video-preview" href={video.url} onBlocked={onBlocked} aria-label={`Mở video ${video.title}`}>
+        <a className="info-video-preview" href={video.url} target="_blank" rel="noreferrer" aria-label={`Mở video ${video.title}`}>
           <img src={video.thumbnail} alt={video.title} className="info-video-thumb" loading="lazy" />
           <span className="info-play-badge">▶</span>
-        </YouTubeLink>
+        </a>
         <div className="info-video-meta">
           <div className="info-video-title">{title}</div>
-          <YouTubeLink href={video.url} onBlocked={onBlocked}>{video.title}</YouTubeLink>
+          <a href={video.url} target="_blank" rel="noreferrer">{video.title}</a>
           <span>{formatViews(video.viewCount)}</span>
         </div>
       </div>
@@ -73,23 +52,6 @@ export default function Info() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [payload, setPayload] = useState(null);
-  const [blockedUrl, setBlockedUrl] = useState('');
-  const [copyStatus, setCopyStatus] = useState('');
-  const fallbackInput = useRef(null);
-  const handleBlocked = (url) => {
-    setCopyStatus('');
-    setBlockedUrl(url);
-  };
-  const copyYouTubeLink = async () => {
-    try {
-      await navigator.clipboard.writeText(blockedUrl);
-      setCopyStatus('Đã sao chép. Hãy dán link vào Safari để mở YouTube.');
-    } catch {
-      fallbackInput.current?.focus();
-      fallbackInput.current?.select();
-      setCopyStatus('Nhấn giữ link bên dưới và chọn Sao chép, sau đó dán vào Safari.');
-    }
-  };
 
   useEffect(() => {
     let cancelled = false;
@@ -141,25 +103,11 @@ export default function Info() {
 
   return (
     <section className="info-page">
-      {blockedUrl && (
-        <div className="info-open-help" role="status">
-          <strong>Chưa mở được ứng dụng YouTube?</strong>
-          <p>Nếu đang dùng TikTok hoặc Facebook, mở menu của trình duyệt và chọn mở bằng Safari hoặc trình duyệt ngoài nếu có. Bạn cũng có thể sao chép link dưới đây rồi dán vào Safari.</p>
-          <input ref={fallbackInput} aria-label="Link YouTube để sao chép" readOnly value={blockedUrl} onFocus={(event) => event.target.select()} />
-          <div className="info-open-help-actions">
-            <button type="button" onClick={copyYouTubeLink}>Sao chép link</button>
-            <a href={blockedUrl} target="_blank" rel="noreferrer">Xem trên web</a>
-            <button type="button" onClick={() => setBlockedUrl('')}>Đóng</button>
-          </div>
-          {copyStatus && <p>{copyStatus}</p>}
-        </div>
-      )}
       <div className="info-wrap">
         <aside className="info-channel-card">
-          <YouTubeLink
+          <a
             className="info-logo-link"
             href={payload?.channel?.url || 'https://www.youtube.com'}
-            onBlocked={handleBlocked}
             target="_blank"
             rel="noreferrer"
             aria-label="Mở kênh YouTube"
@@ -169,7 +117,7 @@ export default function Info() {
             ) : (
               <YouTubeLogo />
             )}
-          </YouTubeLink>
+          </a>
 
           <div className="info-channel-meta">
             <h1>{payload?.channel?.title || 'Kênh YouTube'}</h1>
@@ -184,15 +132,14 @@ export default function Info() {
               </p>
             )}
 
-            <YouTubeLink
+            <a
               className="info-subscribe-btn"
               href={payload?.channel?.subscribeUrl || 'https://www.youtube.com'}
-              onBlocked={handleBlocked}
               target="_blank"
               rel="noreferrer"
             >
               Đăng ký
-            </YouTubeLink>
+            </a>
 
             {user?.role === 'admin' && (
               <button
@@ -211,9 +158,9 @@ export default function Info() {
         </aside>
 
         <div className="info-videos-area">
-          <VideoBox title="Video mới nhất #1" video={latestVideos[0]} onBlocked={handleBlocked} />
-          <VideoBox title="Video mới nhất #2" video={latestVideos[1]} onBlocked={handleBlocked} />
-          <VideoBox title="Video nhiều lượt xem nhất" video={mostViewedVideo} featured onBlocked={handleBlocked} />
+          <VideoBox title="Video mới nhất #1" video={latestVideos[0]} />
+          <VideoBox title="Video mới nhất #2" video={latestVideos[1]} />
+          <VideoBox title="Video nhiều lượt xem nhất" video={mostViewedVideo} featured />
         </div>
       </div>
     </section>
